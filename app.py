@@ -1,4 +1,6 @@
 import streamlit as st
+import streamlit.web.bootstrap as st_bootstrap
+
 import os
 import math
 import requests
@@ -92,12 +94,12 @@ def generate_midjourney_prompts(prompts) -> ImagePromptOutputModel:
 
 def main():
 
-    st.title("Midjourney Prompt Generator")
+    st.title("Image Gen AI Prompt Generator")
     st.caption('“If you can imagine it, you can generate it” - Runway Gen-2 commercial')
 
     st.write("Streamlit application for a showcase of the [LLM Few Shot Generator Library](https://github.com/FloTeu/llm-few-shot-generator). \n"
              "The app allows you to extract sample prompts from the Midjourney website. A subsample of these prompts can then be used to generate new prompts for ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
-    st.write("[Source code frontend](https://github.com/FloTeu/midjourney-prompt-generator)")
+    st.write("[Source code frontend](https://github.com/FloTeu/few-shot-image-gen-app)")
     st.write("[Source code backend](https://github.com/FloTeu/llm-few-shot-generator)")
 
     with st.expander("Example"):
@@ -143,7 +145,22 @@ def main():
         st.sidebar.button("Prompt Generation", on_click=display_prompt_generation_tab, args=(midjourney_images, selected_prompts, tab_prompt_gen, tab_crawling, ), key="button_prompt_generation")
 
 
+def start_app():
+    if st.runtime.exists():
+        main()
+    else:
+        # If the file has been executed with python (`python app.py`), the streamlit functionality
+        # won't work. This line reruns the app within the streamlit context, as if it has been
+        # executed with `streamlit run app.py`.
+        # This is necessary when installing this project from a .whl package, since the executable
+        # only gets execute by python and not by streamlit.
 
+        st_bootstrap.run(
+            __file__,
+            command_line="",
+            args=[],
+            flag_options={},
+        )
 
 if __name__ == "__main__":
-    main()
+    start_app()

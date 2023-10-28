@@ -1,9 +1,0 @@
-llm-few-shot-gen
-streamlit==1.22.*
-requests==2.31.*
-openai==0.27.*
-
-# selenium
-selenium==4.10.*
-undetected-chromedriver==3.5.0
-seleniumbase==4.15.*

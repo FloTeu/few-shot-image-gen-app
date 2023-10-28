@@ -9,12 +9,12 @@ packages = [{include = "few_shot_image_gen_app"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 llm-few-shot-gen = "^0.0.3"
-streamlit = "^1.28.0"
-requests = "^2.31.0"
-openai = "^0.28.1"
-selenium = "^4.14.0"
-undetected-chromedriver = "^3.5.3"
-seleniumbase = "^4.20.7"
+streamlit = "~1.22.0"
+requests = "~2.31.0"
+openai = "~0.27.0"
+selenium = "^4.10"
+undetected-chromedriver = "3.5.0"
+seleniumbase = "^4.15"
 
 
 [build-system]
