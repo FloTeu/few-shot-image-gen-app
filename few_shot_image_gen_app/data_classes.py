@@ -1,5 +1,6 @@
 from few_shot_image_gen_app.selenium_fns import SeleniumBrowser
 from llm_few_shot_gen.models.output import ImagePromptOutputModel
+from llm_few_shot_gen.generators.midjourney import MidjourneyPromptGenerator
 from dataclasses import dataclass, field
 from typing import List, Optional
 from enum import Enum
@@ -41,6 +42,8 @@ class Status:
 class ImageGenerationData:
     gen_image_pil: PILImage.Image | None = None
     prompt_gen_llm_output: ImagePromptOutputModel | None = None
+    # TODO: Make this indpendable to midjjourney
+    prompt_generator: MidjourneyPromptGenerator | None = None
 
 @dataclass
 class SessionState:

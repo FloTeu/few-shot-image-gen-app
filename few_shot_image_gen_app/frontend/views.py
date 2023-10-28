@@ -54,11 +54,35 @@ def display_prompt_generation_tab(midjourney_images):
 
     # Display selected images/prompts
     if "selected_prompts" in st.session_state:
+        # Images
         st.subheader("Selected Midjourney Images")
         selected_prompts: List[int] = st.session_state["selected_prompts"]
         selected_midjourney_images = [mid_img for i, mid_img in enumerate(midjourney_images) if
                                       (i + 1) in selected_prompts]
         display_crawled_ai_images(selected_midjourney_images, make_collapsable=True)
+
+        # Prompt Engineering
+        st.subheader("Prompt Engineering")
+        expander = st.expander("Click to see details about prompt generation", expanded=False)
+        prompt_generator = session_state.image_generation_data.prompt_generator
+        with expander:
+            markdown = "# Prompt for Text-to-Image Prompt Generation\n"
+            markdown += "## 1. Instruction\n"
+            markdown += prompt_generator.messages.instruction.format().content
+            markdown += "\n"
+            markdown += "## 2. Context\n"
+            for context_msg in prompt_generator.messages.context:
+                markdown += context_msg.format().content
+                markdown += "\n"
+            markdown += "## 3. Few Shot Examples\n"
+            for example_msg in prompt_generator.messages.few_shot_examples:
+                markdown += example_msg.format().content
+                markdown += "\n"
+            markdown += "## 4. Input Output\n"
+            markdown += prompt_generator.messages.io_prompt.format(text=st.session_state["prompt_gen_input"]).content
+            markdown += "\n"
+            # Display Markdown
+            st.markdown(markdown)
 
 
 def generate_image_model_prompts(prompts: List[str], tab_prompt_gen) -> ImagePromptOutputModel:
@@ -71,6 +95,7 @@ def generate_image_model_prompts(prompts: List[str], tab_prompt_gen) -> ImagePro
             llm_output = midjourney_prompt_gen.generate(text=st.session_state["prompt_gen_input"])
     # store results into session object
     session_state: SessionState = st.session_state["session_state"]
+    session_state.image_generation_data.prompt_generator = midjourney_prompt_gen
     session_state.image_generation_data.prompt_gen_llm_output = llm_output
     return llm_output
 
