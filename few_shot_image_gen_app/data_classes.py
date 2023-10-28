@@ -7,6 +7,12 @@ class CrawlingTargetPage(str, Enum):
     MIDJOURNEY = "midjourney.com"
     OPENART = "openart.ai"
 
+class ImageModel(str, Enum):
+    STABLE_DIFFUSION = "Stable Diffusion"
+    MIDJOURNEY = "Midjourney"
+    DALLE_2 = "DALL·E 2"
+
+
 @dataclass
 class AIImage:
     image_url: str
@@ -15,6 +21,7 @@ class AIImage:
 @dataclass
 class CrawlingRequest:
     search_term: str
+    image_ais: List[ImageModel]
 
 @dataclass
 class CrawlingData:

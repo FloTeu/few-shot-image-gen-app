@@ -7,7 +7,7 @@ import requests
 from typing import List
 from io import BytesIO
 from few_shot_image_gen_app.session import update_request
-from few_shot_image_gen_app.data_classes import SessionState
+from few_shot_image_gen_app.data_classes import SessionState, ImageModel
 from few_shot_image_gen_app.crawling.midjourney import crawl_midjourney, login_to_midjourney
 from few_shot_image_gen_app.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
 from few_shot_image_gen_app.data_classes import AIImage, CrawlingTargetPage
@@ -112,14 +112,15 @@ def main():
     tab_crawling, tab_prompt_gen = st.tabs(["Crawling", "Prompt Generation"])
 
     st.sidebar.subheader("1. Crawling Target Page")
-    target_page: CrawlingTargetPage = st.sidebar.selectbox("Crawling target page", options=["openart.ai", "midjourney.com"])
+    target_page: CrawlingTargetPage = st.sidebar.selectbox("Crawling target page", options=[CrawlingTargetPage.OPENART.value])#, CrawlingTargetPage.MIDJOURNEY.value])
     if target_page == CrawlingTargetPage.MIDJOURNEY:
         st.sidebar.info("*prompt search is only available for authenticated midjourney users")
         st.sidebar.text_input("Midjourney Email", value=os.environ.get("user_name", ""), key="mid_email")
         st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""), key="mid_password")
         st.sidebar.button("Login", on_click=login_to_midjourney, key="button_midjourney_login")
 
-    st.sidebar.subheader("2. Midjourney Crawling")
+    st.sidebar.subheader("2. Crawling")
+    st.sidebar.multiselect("Image AI Target Prompts", [ImageModel.STABLE_DIFFUSION.value, ImageModel.MIDJOURNEY.value, ImageModel.DALLE_2.value], default=[ImageModel.STABLE_DIFFUSION.value], key="image_models", on_change=update_request)
     st.sidebar.text_input("Search Term (e.g. art style)", key="search_term", on_change=update_request)
     if st.sidebar.button("Start Crawling", on_click=crawl_openartai if target_page == CrawlingTargetPage.OPENART else crawl_midjourney, args=(tab_crawling, ), key="button_midjourney_crawling"):
         session_state: SessionState = st.session_state["session_state"]

@@ -1,5 +1,6 @@
 import time
 import logging
+import urllib.parse
 import streamlit as st
 
 from typing import List
@@ -9,11 +10,25 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
-from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage
+from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage, ImageModel
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+def get_discovery_url(search_term: str, image_models: List[ImageModel], only_community=False):
+    search_type = "community-only" if only_community else "both"
+    search_models = []
+    for image_ai in image_models:
+        if image_ai == ImageModel.STABLE_DIFFUSION:
+            search_models.append("sd")
+        if image_ai == ImageModel.DALLE_2:
+            search_models.append("dalle2")
+        if image_ai == ImageModel.MIDJOURNEY:
+            search_models.append("md")
 
+    # encode to url format
+    search_models = urllib.parse.quote_plus(",".join(search_models))
+    search_term = urllib.parse.quote_plus(search_term)
+    return f"https://openart.ai/search/{search_term}?searchType={search_type}&searchModel={search_models}"
 
 def get_openartai_discovery(driver: WebDriver):
     driver.get("https://openart.ai/discovery")
@@ -146,19 +161,15 @@ def click_image(driver, prompt):
 
 def crawl_openartai(crawling_tab):
     set_session_state_if_not_exists()
-    progress_text = "Crawling Midjourney images"
+    progress_text = "Crawling openart ai images"
     crawling_progress_bar = crawling_tab.progress(0, text=progress_text)
     crawling_progress_bar.progress(10,text=progress_text + ": Setup...")
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
     time.sleep(1)
     crawling_progress_bar.progress(20,text=progress_text + ": Search...")
-    get_openartai_discovery(driver)
-    crawling_progress_bar.progress(30,text=progress_text + ": Search...")
-    openartai_search_prompts(session_state.crawling_request.search_term, driver)
-    time.sleep(1)
-    crawling_progress_bar.progress(40,text=progress_text + ": Apply filters...")
-    #apply_filters(driver)
+    discovery_url = get_discovery_url(session_state.crawling_request.search_term, session_state.crawling_request.image_ais)
+    driver.get(discovery_url)
     time.sleep(2)
     crawling_progress_bar.progress(50,text=progress_text + ": Crawling...")
     session_state.crawling_data = CrawlingData(images=extract_midjourney_images(driver, crawling_progress_bar, 50))

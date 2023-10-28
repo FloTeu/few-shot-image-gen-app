@@ -13,7 +13,8 @@ def is_debug():
 
 def creat_session_state() -> SessionState:
     search_term = st.session_state["search_term"]
-    request = CrawlingRequest(search_term=search_term)
+    image_ais = st.session_state["image_models"]
+    request = CrawlingRequest(search_term=search_term, image_ais=image_ais)
     crawling_data = CrawlingData()
     status = Status()
     session_id = get_session_id()
@@ -38,6 +39,7 @@ def update_request():
     session_state: SessionState = st.session_state["session_state"]
     request = session_state.crawling_request
     request.search_term = st.session_state["search_term"]
+    request.image_ais = st.session_state["image_models"]
 
     # Reset status
     session_state.status.page_crawled = False
