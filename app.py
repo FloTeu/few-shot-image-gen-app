@@ -46,7 +46,7 @@ def main():
             display_image_gen_tab()
 
     # Display sidebar
-    display_sidebar(tab_crawling)
+    display_sidebar(tab_crawling, tab_prompt_gen)
 
 if __name__ == "__main__":
     main()

@@ -61,12 +61,14 @@ def display_prompt_generation_tab(midjourney_images):
         display_crawled_ai_images(selected_midjourney_images, make_collapsable=True)
 
 
-def generate_image_model_prompts(prompts: List[str]) -> ImagePromptOutputModel:
-    with st.spinner('Wait for prompt generation'):
-        llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name="gpt-3.5-turbo")
-        midjourney_prompt_gen = MidjourneyPromptGenerator(llm, pydantic_cls=ImagePromptOutputModel)
-        midjourney_prompt_gen.set_few_shot_examples(prompts)
-        llm_output = midjourney_prompt_gen.generate(text=st.session_state["prompt_gen_input"])
+def generate_image_model_prompts(prompts: List[str], tab_prompt_gen) -> ImagePromptOutputModel:
+    print("Generate image prompts with few shots", prompts)
+    with tab_prompt_gen:
+        with st.spinner('Wait for prompt generation'):
+            llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name="gpt-3.5-turbo")
+            midjourney_prompt_gen = MidjourneyPromptGenerator(llm, pydantic_cls=ImagePromptOutputModel)
+            midjourney_prompt_gen.set_few_shot_examples(prompts)
+            llm_output = midjourney_prompt_gen.generate(text=st.session_state["prompt_gen_input"])
     # store results into session object
     session_state: SessionState = st.session_state["session_state"]
     session_state.image_generation_data.prompt_gen_llm_output = llm_output
@@ -79,15 +81,16 @@ def display_image_gen_tab():
     st.subheader("Image Generation Prompt")
     llm_output: ImagePromptOutputModel | None = session_state.image_generation_data.prompt_gen_llm_output
     if llm_output:
-        prompt = st.text_area("Prompt", value=llm_output.image_prompts[0])
+        prompt_suggestion = st.selectbox("Generated Prompts", llm_output.image_prompts)
+        prompt = st.text_area("Prompt", value=prompt_suggestion)
         # Atm only SDXL is available
         image_ai_model = st.selectbox("Image GenAI Model", (ImageModelGeneration.STABLE_DIFFUSION.value, ""))
         if st.button("Generate Image", key="Image Gen Button"):
-            with st.spinner('Wait for image generation'):
+            with st.spinner('Image generation...'):
                 image = generate_with_stable_diffusion(prompt)
                 session_state.image_generation_data.gen_image_pil = image
         else:
             image: Image | None = session_state.image_generation_data.gen_image_pil
 
         if image:
-            st.image(image)
+            st.image(image, width=512)

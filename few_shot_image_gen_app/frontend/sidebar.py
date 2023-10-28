@@ -9,7 +9,7 @@ from few_shot_image_gen_app.data_classes import CrawlingTargetPage, ImageModelCr
 from few_shot_image_gen_app.session import update_request
 
 
-def display_sidebar(tab_crawling):
+def display_sidebar(tab_crawling, tab_prompt_gen):
     st.sidebar.subheader("1. Crawling")
     # Target crawling page
     target_page: CrawlingTargetPage = st.sidebar.selectbox("Crawling target page", options=[
@@ -53,6 +53,5 @@ def display_sidebar(tab_crawling):
         selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:",
                                                   [i + 1 for i in range(len(ai_images))], key='selected_prompts')
         prompts = [mid_img.prompt for i, mid_img in enumerate(ai_images) if (i + 1) in selected_prompts]
-        st.sidebar.text_input("Prompt Gen Input", on_change=generate_image_model_prompts, args=(prompts,),
-                              key="prompt_gen_input")
-        st.sidebar.button("Prompt Generation", key="button_prompt_generation")
+        st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
+        st.sidebar.button("Prompt Generation", on_click=generate_image_model_prompts, args=(prompts, tab_prompt_gen,), key="button_prompt_generation")
