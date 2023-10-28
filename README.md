@@ -47,3 +47,8 @@ Optionally set environment variable DEBUG = 1, in order to run selenium without 
 ```console
 streamlit run app.py
 ```
+
+### TODOs
+- [ ] Include LLM prompt with highlited prompt elements
+- [ ] Ensure crawled data is also display
+- [ ] Update Prompt Engineering class for SDXL

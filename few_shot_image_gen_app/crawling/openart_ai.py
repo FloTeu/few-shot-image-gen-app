@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
+from few_shot_image_gen_app.crawling.selenium_fns import has_button_ancestor
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
 from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage, ImageModelCrawling
 from selenium.webdriver.support.ui import WebDriverWait
@@ -101,7 +102,10 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
                 continue
             assert any(image_url.endswith(ending) for ending in [".webp", ".jpg", "jpeg", ".png"]) , f"image_url {image_url}, is not in the expected image format"
             # extract prompt from text area
-            prompt = gridcell.find_element(By.CLASS_NAME, "MuiTypography-body2").text
+            text_elements = gridcell.find_elements(By.CLASS_NAME, "MuiTypography-body2")
+            # Assumption: Last text element is "remix" button, first one is optionally the user name (if existent)
+            text_list = [text_element.text for text_element in text_elements if not has_button_ancestor(text_element)]
+            prompt = text_list[-1]
             if not check_if_image_exists(midjourney_images, image_url):
                 midjourney_images.append(AIImage(image_url=image_url, prompt=prompt))
             crawling_progress_bar.progress(int(progress + (progress_left * (i/len(gridcells)))), text="Crawling Midjourney images" + ": Crawling...")
@@ -168,7 +172,7 @@ def crawl_openartai(crawling_tab):
     driver = session_state.browser.driver
     time.sleep(1)
     crawling_progress_bar.progress(20,text=progress_text + ": Search...")
-    discovery_url = get_discovery_url(session_state.crawling_request.search_term, session_state.crawling_request.image_ais)
+    discovery_url = get_discovery_url(session_state.crawling_request.search_term, session_state.crawling_request.image_ais, only_community=st.session_state["community_only"])
     driver.get(discovery_url)
     time.sleep(2)
     crawling_progress_bar.progress(50,text=progress_text + ": Crawling...")

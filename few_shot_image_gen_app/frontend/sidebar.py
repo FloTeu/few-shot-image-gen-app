@@ -20,6 +20,9 @@ def display_sidebar(tab_crawling):
         st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""),
                               key="mid_password")
         st.sidebar.button("Login", on_click=login_to_midjourney, key="button_midjourney_login")
+    if target_page == CrawlingTargetPage.OPENART:
+        st.sidebar.toggle("Community Only", value=False, help="Ensures image was uploaded with a community account", key="community_only")
+
     # Crawling Request
     st.sidebar.multiselect("Image AI Target Prompts",
                            [ImageModelCrawling.STABLE_DIFFUSION.value, ImageModelCrawling.MIDJOURNEY.value,

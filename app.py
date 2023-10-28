@@ -18,12 +18,11 @@ st.set_page_config(
 
 
 def main():
-
     st.title("Image Gen AI Prompt Generator")
     st.caption('“If you can imagine it, you can generate it” - Runway Gen-2 commercial')
 
     st.write("Streamlit application for a showcase of the [LLM Few Shot Generator Library](https://github.com/FloTeu/llm-few-shot-generator). \n"
-             "The app allows you to extract sample prompts from the Midjourney website. A subsample of these prompts can then be used to generate new prompts for ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
+             "The app allows you to extract sample prompts from openart.ai website. A subsample of these prompts can then be used to generate new prompts for ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
     st.write("[Source code frontend](https://github.com/FloTeu/few-shot-image-gen-app)")
     st.write("[Source code backend](https://github.com/FloTeu/llm-few-shot-generator)")
 
