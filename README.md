@@ -33,6 +33,15 @@ printf 'open_ai_api_key = ""' > .streamlit/secrets.toml
 If it not exists yet, you have to create a open ai api key:
 1. openai api key: https://platform.openai.com/account/api-keys
 
+Setup Dependency Environment with poetry 
+Install poetry on your device (https://python-poetry.org/docs/)
+```shell
+# install all dependencies
+poetry install
+# Enter shell within poetry environment
+poetry shell
+```
+
 ### Run
 Optionally set environment variable DEBUG = 1, in order to run selenium without headless mode
 ```console

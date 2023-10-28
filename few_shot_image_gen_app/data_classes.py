@@ -1,6 +1,6 @@
-from utils.selenium_fns import SeleniumBrowser
+from few_shot_image_gen_app.selenium_fns import SeleniumBrowser
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List
 from enum import Enum
 
 class CrawlingTargetPage(str, Enum):

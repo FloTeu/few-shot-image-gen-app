@@ -1,13 +1,14 @@
 import streamlit as st
-import os, sys
+import os
 import math
 import requests
 from typing import List
 from io import BytesIO
-from utils.session import update_request, SessionState
-from utils.crawling.midjourney import crawl_midjourney, login_to_midjourney
-from utils.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
-from utils.data_classes import MidjourneyImage, CrawlingTargetPage
+from few_shot_image_gen_app.session import update_request
+from few_shot_image_gen_app.data_classes import SessionState
+from few_shot_image_gen_app.crawling.midjourney import crawl_midjourney, login_to_midjourney
+from few_shot_image_gen_app.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
+from few_shot_image_gen_app.data_classes import MidjourneyImage, CrawlingTargetPage
 from llm_few_shot_gen.generators import MidjourneyPromptGenerator
 from llm_few_shot_gen.models.output import ImagePromptOutputModel
 from langchain.chat_models.openai import ChatOpenAI

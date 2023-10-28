@@ -1,9 +1,8 @@
 import os
 import streamlit as st
 
-from typing import List, Any
-from utils.data_classes import SessionState, CrawlingRequest, CrawlingData, Status
-from utils.selenium_fns import SeleniumBrowser
+from few_shot_image_gen_app.data_classes import SessionState, CrawlingRequest, CrawlingData, Status
+from few_shot_image_gen_app.selenium_fns import SeleniumBrowser
 
 
 def booleanize(s):

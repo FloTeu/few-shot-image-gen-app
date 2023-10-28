@@ -6,8 +6,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 
-from utils.session import set_session_state_if_not_exists
-from utils.data_classes import SessionState, CrawlingData, MidjourneyImage
+from few_shot_image_gen_app.session import set_session_state_if_not_exists
+from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, MidjourneyImage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
