@@ -2,7 +2,7 @@ import os
 
 import streamlit as st
 
-from few_shot_image_gen_app.frontend.views import display_midjourney_images, generate_image_model_prompts
+from few_shot_image_gen_app.frontend.views import display_crawled_ai_images, generate_image_model_prompts
 from few_shot_image_gen_app.crawling.midjourney import login_to_midjourney, crawl_midjourney
 from few_shot_image_gen_app.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
 from few_shot_image_gen_app.data_classes import CrawlingTargetPage, ImageModelCrawling, SessionState
@@ -33,20 +33,17 @@ def display_sidebar(tab_crawling):
                          on_click=crawl_openartai if target_page == CrawlingTargetPage.OPENART else crawl_midjourney,
                          args=(tab_crawling,), key="button_midjourney_crawling"):
         session_state: SessionState = st.session_state["session_state"]
-        display_midjourney_images(session_state.crawling_data.images, make_collapsable=False)
+        display_crawled_ai_images(session_state.crawling_data.images, make_collapsable=False)
         tab_crawling.info('Please go to "Prompt Generation" tab')
     # Crawl similar images
     if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(
             st.session_state["session_state"].crawling_data.images) > 0:
         session_state: SessionState = st.session_state["session_state"]
         deep_crawl_image_nr = st.sidebar.selectbox("(optional) Crawl Similar Images",
-                                                   [i + 1 for i in range(len(session_state.crawling_data.images))],
-                                                   on_change=display_midjourney_images,
-                                                   args=(session_state.crawling_data.images, tab_crawling, False,))
-        if st.sidebar.button("Start Similar Image Crawling", on_click=crawl_openartai_similar_images,
+                                                   [i + 1 for i in range(len(session_state.crawling_data.images))])
+        st.sidebar.button("Start Similar Image Crawling", on_click=crawl_openartai_similar_images,
                              args=(tab_crawling, deep_crawl_image_nr - 1,),
-                             key="button_midjourney_crawling_similar_images"):
-            display_midjourney_images(session_state.crawling_data.images, make_collapsable=False)
+                             key="button_midjourney_crawling_similar_images")
 
     if "session_state" in st.session_state:
         session_state: SessionState = st.session_state["session_state"]

@@ -6,10 +6,11 @@ import streamlit as st
 from typing import List
 from contextlib import suppress
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
-from few_shot_image_gen_app.crawling.selenium_fns import has_button_ancestor
+from few_shot_image_gen_app.crawling.selenium_fns import has_button_ancestor, wait_until_element_disappears, save_html
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
 from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage, ImageModelCrawling
 from selenium.webdriver.support.ui import WebDriverWait
@@ -67,15 +68,24 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
     except:
         driver_view = driver
     expand_prompt_text(driver)
-    # scroll to botton
+    # 1. Scroll to bottom in order to load more images
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    # Note: loading circle has role "progressbar"
+    wait_until_element_disappears(driver, '//*[@role="progressbar"]', timeout=10)
+
+    # Make sure after loadingbar disappeared, that image/prompt elements are ready for crawling
     time.sleep(1)
     expand_prompt_text(driver)
 
-    # bring grid elements in right order to screen scrolling
-    columns = driver_view.find_elements(By.XPATH, ".//*[contains(@style, 'flex-direction: column')]")
+    save_html(driver)
 
-    grid_columns = []
+    # 2. bring grid elements in right order for later screen scrolling
+    columns: List[WebElement] = driver_view.find_elements(By.XPATH, ".//*[contains(@style, 'flex-direction: column')]")
+    if len(columns) == 0:
+        print("Retry extracting columns")
+        columns: List[WebElement] = driver_view.find_elements(By.XPATH, ".//*[contains(@style, 'flex-direction:column')]")
+
+    grid_columns: List[List[WebElement]] = []
     for column in columns:
         grid_columns.append(column.find_elements(By.CLASS_NAME, 'MuiCard-root'))
     gridcells = []
@@ -84,12 +94,11 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
             for grid_column in grid_columns:
                 with suppress(IndexError):
                     gridcells.append(grid_column[i])
-    progress_left = progress_max - progress
-    for i, gridcell in enumerate(gridcells):
-        # skip if its not a midjourney image
-        # if len(gridcell.find_elements(By.XPATH, "//span[text()='Midjourney']")) == 0:
-        #     continue
 
+    # 3. Extract image and prompt data
+    progress_left = progress_max - progress
+    print(f"Found {len(gridcells)} gridcells with potential image and prompt pairs. {len(columns)} columns, {len(grid_columns)} grid_columns")
+    for i, gridcell in enumerate(gridcells):
         try:
             # Scroll to the element using JavaScript
             driver.execute_script("arguments[0].scrollIntoView();", gridcell)
@@ -170,11 +179,10 @@ def crawl_openartai(crawling_tab):
     crawling_progress_bar.progress(10,text=progress_text + ": Setup...")
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
-    time.sleep(1)
     crawling_progress_bar.progress(20,text=progress_text + ": Search...")
     discovery_url = get_discovery_url(session_state.crawling_request.search_term, session_state.crawling_request.image_ais, only_community=st.session_state["community_only"])
     driver.get(discovery_url)
-    time.sleep(2)
+    time.sleep(3)
     crawling_progress_bar.progress(50,text=progress_text + ": Crawling...")
     session_state.crawling_data = CrawlingData(images=extract_midjourney_images(driver, crawling_progress_bar, 50))
     crawling_progress_bar.empty()

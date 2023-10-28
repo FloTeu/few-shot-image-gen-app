@@ -17,7 +17,7 @@ def split_list(list_obj, split_size):
     return [list_obj[i:i+split_size] for i in range(0, len(list_obj), split_size)]
 
 
-def display_midjourney_images(midjourney_images: List[AIImage], make_collapsable=False):
+def display_crawled_ai_images(ai_images: List[AIImage], make_collapsable=False):
     """ Displays already crawled midjourney images with prompts to frontend.
     """
 
@@ -26,9 +26,9 @@ def display_midjourney_images(midjourney_images: List[AIImage], make_collapsable
     crawling_progress_bar = expander.progress(89, text=progress_text)
     display_images = expander.empty()
     display_cols = display_images.columns(MAX_IMAGES_PER_ROW)
-    for j, midjourney_images_splitted_list in enumerate(split_list(midjourney_images, MAX_IMAGES_PER_ROW)):
+    for j, midjourney_images_splitted_list in enumerate(split_list(ai_images, MAX_IMAGES_PER_ROW)):
         for i, midjourney_image in enumerate(midjourney_images_splitted_list):
-            crawling_progress_bar.progress(math.ceil(89 + (10 / len(midjourney_images) * ((j * MAX_IMAGES_PER_ROW) + i)) + 1),
+            crawling_progress_bar.progress(math.ceil(89 + (10 / len(ai_images) * ((j * MAX_IMAGES_PER_ROW) + i)) + 1),
                                            text=progress_text)
             display_cols[i].image(midjourney_image.image_url)
             #color = "black" if not midjourney_image.selected else "green"
@@ -58,7 +58,7 @@ def display_prompt_generation_tab(midjourney_images):
         selected_prompts: List[int] = st.session_state["selected_prompts"]
         selected_midjourney_images = [mid_img for i, mid_img in enumerate(midjourney_images) if
                                       (i + 1) in selected_prompts]
-        display_midjourney_images(selected_midjourney_images, make_collapsable=True)
+        display_crawled_ai_images(selected_midjourney_images, make_collapsable=True)
 
 
 def generate_image_model_prompts(prompts: List[str]) -> ImagePromptOutputModel:

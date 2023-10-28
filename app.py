@@ -1,7 +1,7 @@
 import streamlit as st
 
 from few_shot_image_gen_app.frontend.sidebar import display_sidebar
-from few_shot_image_gen_app.frontend.views import display_midjourney_images, display_prompt_generation_tab, \
+from few_shot_image_gen_app.frontend.views import display_crawled_ai_images, display_prompt_generation_tab, \
     display_image_gen_tab
 from few_shot_image_gen_app.utils import init_environment
 from few_shot_image_gen_app.data_classes import SessionState
@@ -38,7 +38,7 @@ def main():
     if "session_state" in st.session_state:
         session_state: SessionState = st.session_state["session_state"]
         with tab_crawling:
-            display_midjourney_images(session_state.crawling_data.images, make_collapsable=False)
+            display_crawled_ai_images(session_state.crawling_data.images, make_collapsable=False)
         with tab_prompt_gen:
             if session_state.image_generation_data.prompt_gen_llm_output:
                 display_prompt_generation_tab(session_state.crawling_data.images)
