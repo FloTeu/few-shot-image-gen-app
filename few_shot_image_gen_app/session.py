@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 
-from few_shot_image_gen_app.data_classes import SessionState, CrawlingRequest, CrawlingData, Status
+from few_shot_image_gen_app.data_classes import SessionState, CrawlingRequest, CrawlingData, Status, ImageGenerationData
 from few_shot_image_gen_app.selenium_fns import SeleniumBrowser
 
 
@@ -18,10 +18,11 @@ def creat_session_state() -> SessionState:
     crawling_data = CrawlingData()
     status = Status()
     session_id = get_session_id()
+    image_generation_data = ImageGenerationData()
 
     browser = SeleniumBrowser()
     browser.setup(headless=not is_debug())
-    return SessionState(crawling_request=request, browser=browser, crawling_data=crawling_data, status=status, session_id=session_id)
+    return SessionState(crawling_request=request, browser=browser, crawling_data=crawling_data, image_generation_data=image_generation_data, status=status, session_id=session_id)
 
 
 def get_session_id():

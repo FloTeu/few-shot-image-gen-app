@@ -10,19 +10,19 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
-from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage, ImageModel
+from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage, ImageModelCrawling
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-def get_discovery_url(search_term: str, image_models: List[ImageModel], only_community=False):
+def get_discovery_url(search_term: str, image_models: List[ImageModelCrawling], only_community=False):
     search_type = "community-only" if only_community else "both"
     search_models = []
     for image_ai in image_models:
-        if image_ai == ImageModel.STABLE_DIFFUSION:
+        if image_ai == ImageModelCrawling.STABLE_DIFFUSION:
             search_models.append("sd")
-        if image_ai == ImageModel.DALLE_2:
+        if image_ai == ImageModelCrawling.DALLE_2:
             search_models.append("dalle2")
-        if image_ai == ImageModel.MIDJOURNEY:
+        if image_ai == ImageModelCrawling.MIDJOURNEY:
             search_models.append("md")
 
     # encode to url format

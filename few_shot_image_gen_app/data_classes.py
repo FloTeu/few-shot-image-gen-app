@@ -1,17 +1,21 @@
 from few_shot_image_gen_app.selenium_fns import SeleniumBrowser
+from llm_few_shot_gen.models.output import ImagePromptOutputModel
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 from enum import Enum
+from PIL import Image as PILImage
 
 class CrawlingTargetPage(str, Enum):
     MIDJOURNEY = "midjourney.com"
     OPENART = "openart.ai"
 
-class ImageModel(str, Enum):
+class ImageModelCrawling(str, Enum):
     STABLE_DIFFUSION = "Stable Diffusion"
     MIDJOURNEY = "Midjourney"
     DALLE_2 = "DALL·E 2"
 
+class ImageModelGeneration(str, Enum):
+    STABLE_DIFFUSION = "Stable Diffusion (SDXL)"
 
 @dataclass
 class AIImage:
@@ -21,7 +25,7 @@ class AIImage:
 @dataclass
 class CrawlingRequest:
     search_term: str
-    image_ais: List[ImageModel]
+    image_ais: List[ImageModelCrawling]
 
 @dataclass
 class CrawlingData:
@@ -34,9 +38,15 @@ class Status:
     prompts_generated: bool = False
 
 @dataclass
+class ImageGenerationData:
+    gen_image_pil: PILImage.Image | None = None
+    prompt_gen_llm_output: ImagePromptOutputModel | None = None
+
+@dataclass
 class SessionState:
     crawling_request: CrawlingRequest
     browser: SeleniumBrowser
     crawling_data: CrawlingData
+    image_generation_data: ImageGenerationData
     status: Status
     session_id: str
