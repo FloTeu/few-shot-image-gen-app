@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
-from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, MidjourneyImage
+from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -80,7 +80,7 @@ def midjourney_search_prompts(search_term: str, driver: WebDriver):
     search_button = parent_element.find_element(By.XPATH, './following-sibling::button')
     search_button.click()
 
-def check_if_image_exists(images: List[MidjourneyImage], image_url: str) -> bool:
+def check_if_image_exists(images: List[AIImage], image_url: str) -> bool:
     for img in images:
         if img.image_url == image_url:
             return True
@@ -108,12 +108,12 @@ def extend_midjourney_images_by_gridcells(midjourney_images, gridcells, driver):
             # extract prompt from text area
             prompt = driver.find_element(By.CSS_SELECTOR, "p._promptText_").text
             if not check_if_image_exists(midjourney_images, image_url):
-                midjourney_images.append(MidjourneyImage(image_url=image_url, prompt=prompt))
+                midjourney_images.append(AIImage(image_url=image_url, prompt=prompt))
         except Exception as e:
             print(str(e))
 
-def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
-    midjourney_images: List[MidjourneyImage] = []
+def extract_midjourney_images(driver: WebDriver) -> List[AIImage]:
+    midjourney_images: List[AIImage] = []
     gridcells = driver.find_elements(By.CSS_SELECTOR, 'div[role="gridcell"]')
     gridcells.reverse() # last html element is displayed on top of page
 
@@ -136,5 +136,5 @@ def crawl_midjourney(tab_crawling):
     time.sleep(2)
     midjourney_search_prompts(session_state.crawling_request.search_term, driver)
     time.sleep(4)
-    session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver))
+    session_state.crawling_data = CrawlingData(images=extract_midjourney_images(driver))
 

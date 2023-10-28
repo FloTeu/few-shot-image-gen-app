@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
-from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, MidjourneyImage
+from few_shot_image_gen_app.data_classes import SessionState, CrawlingData, AIImage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -27,7 +27,7 @@ def openartai_search_prompts(search_term: str, driver: WebDriver):
     # Simulate pressing the Enter key
     search_input.send_keys(Keys.ENTER)
 
-def check_if_image_exists(images: List[MidjourneyImage], image_url: str) -> bool:
+def check_if_image_exists(images: List[AIImage], image_url: str) -> bool:
     for img in images:
         if img.image_url == image_url:
             return True
@@ -43,8 +43,8 @@ def apply_filters(driver: WebDriver, preiod_wait_in_sec=1):
     # deactivate DALL-E 2
     driver.find_elements(By.CLASS_NAME, 'MuiFormControlLabel-root')[2].click()
 
-def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress: int, progress_max=90) -> List[MidjourneyImage]:
-    midjourney_images: List[MidjourneyImage] = []
+def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress: int, progress_max=90) -> List[AIImage]:
+    midjourney_images: List[AIImage] = []
     try:
         # if we have a presentation view, driver should include only images for this view
         driver_view = driver.find_elements(By.XPATH, "//div[@role='presentation']")[-1]
@@ -88,7 +88,7 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
             # extract prompt from text area
             prompt = gridcell.find_element(By.CLASS_NAME, "MuiTypography-body2").text
             if not check_if_image_exists(midjourney_images, image_url):
-                midjourney_images.append(MidjourneyImage(image_url=image_url, prompt=prompt))
+                midjourney_images.append(AIImage(image_url=image_url, prompt=prompt))
             crawling_progress_bar.progress(int(progress + (progress_left * (i/len(gridcells)))), text="Crawling Midjourney images" + ": Crawling...")
 
         except Exception as e:
@@ -161,7 +161,7 @@ def crawl_openartai(crawling_tab):
     #apply_filters(driver)
     time.sleep(2)
     crawling_progress_bar.progress(50,text=progress_text + ": Crawling...")
-    session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver, crawling_progress_bar, 50))
+    session_state.crawling_data = CrawlingData(images=extract_midjourney_images(driver, crawling_progress_bar, 50))
     crawling_progress_bar.empty()
 
 def crawl_openartai_similar_images(crawling_tab, image_nr):
@@ -170,7 +170,7 @@ def crawl_openartai_similar_images(crawling_tab, image_nr):
     # Get session data
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
-    midjourney_image: MidjourneyImage = session_state.crawling_data.midjourney_images[image_nr]
+    midjourney_image: AIImage = session_state.crawling_data.images[image_nr]
 
     # Click on selected image
     click_image(driver, midjourney_image.prompt)
@@ -178,7 +178,7 @@ def crawl_openartai_similar_images(crawling_tab, image_nr):
     crawling_progress_bar.progress(30,text=progress_text + ": Crawling...")
 
     # Crawl similar images
-    session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver, crawling_progress_bar, 30))
+    session_state.crawling_data = CrawlingData(images=extract_midjourney_images(driver, crawling_progress_bar, 30))
     crawling_progress_bar.empty()
 
 

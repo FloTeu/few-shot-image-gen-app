@@ -10,7 +10,7 @@ from few_shot_image_gen_app.session import update_request
 from few_shot_image_gen_app.data_classes import SessionState
 from few_shot_image_gen_app.crawling.midjourney import crawl_midjourney, login_to_midjourney
 from few_shot_image_gen_app.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
-from few_shot_image_gen_app.data_classes import MidjourneyImage, CrawlingTargetPage
+from few_shot_image_gen_app.data_classes import AIImage, CrawlingTargetPage
 from llm_few_shot_gen.generators import MidjourneyPromptGenerator
 from llm_few_shot_gen.models.output import ImagePromptOutputModel
 from langchain.chat_models.openai import ChatOpenAI
@@ -33,7 +33,7 @@ def image_url2image_bytes_io(image_url: str) -> BytesIO:
 def split_list(list_obj, split_size):
     return [list_obj[i:i+split_size] for i in range(0, len(list_obj), split_size)]
 
-def display_midjourney_images(midjourney_images: List[MidjourneyImage], tab, make_collapsable=False):
+def display_midjourney_images(midjourney_images: List[AIImage], tab, make_collapsable=False):
     """ Displays already crawled midjourney images with prompts to frontend.
     """
 
@@ -123,44 +123,27 @@ def main():
     st.sidebar.text_input("Search Term (e.g. art style)", key="search_term", on_change=update_request)
     if st.sidebar.button("Start Crawling", on_click=crawl_openartai if target_page == CrawlingTargetPage.OPENART else crawl_midjourney, args=(tab_crawling, ), key="button_midjourney_crawling"):
         session_state: SessionState = st.session_state["session_state"]
-        display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling, make_collapsable=False)
+        display_midjourney_images(session_state.crawling_data.images, tab_crawling, make_collapsable=False)
         tab_crawling.info('Please go to "Prompt Generation" tab')
 
     # Crawl similar images
-    if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(st.session_state["session_state"].crawling_data.midjourney_images) > 0:
+    if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(st.session_state["session_state"].crawling_data.images) > 0:
         session_state: SessionState = st.session_state["session_state"]
         deep_crawl_image_nr = st.sidebar.selectbox("(optional) Crawl Similar Images",
-                                          [i + 1 for i in range(len(session_state.crawling_data.midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images, tab_crawling, False, ))
+                                                   [i + 1 for i in range(len(session_state.crawling_data.images))], on_change=display_midjourney_images, args=(session_state.crawling_data.images, tab_crawling, False,))
         if st.sidebar.button("Start Similar Image Crawling", on_click=crawl_openartai_similar_images, args=(tab_crawling, deep_crawl_image_nr - 1, ), key="button_midjourney_crawling_similar_images"):
-            display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling,
+            display_midjourney_images(session_state.crawling_data.images, tab_crawling,
                                       make_collapsable=False)
 
     if "session_state" in st.session_state:
         session_state: SessionState = st.session_state["session_state"]
         st.sidebar.subheader("3. Prompt Generation")
-        midjourney_images = session_state.crawling_data.midjourney_images
+        ai_images = session_state.crawling_data.images
         st.sidebar.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
-        selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:", [i+1 for i in range(len(midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images,tab_crawling,False,), key='selected_prompts')
+        selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:", [i+1 for i in range(len(ai_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.images, tab_crawling, False,), key='selected_prompts')
         st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
-        st.sidebar.button("Prompt Generation", on_click=display_prompt_generation_tab, args=(midjourney_images, selected_prompts, tab_prompt_gen, tab_crawling, ), key="button_prompt_generation")
+        st.sidebar.button("Prompt Generation", on_click=display_prompt_generation_tab, args=(ai_images, selected_prompts, tab_prompt_gen, tab_crawling, ), key="button_prompt_generation")
 
-
-def start_app():
-    if st.runtime.exists():
-        main()
-    else:
-        # If the file has been executed with python (`python app.py`), the streamlit functionality
-        # won't work. This line reruns the app within the streamlit context, as if it has been
-        # executed with `streamlit run app.py`.
-        # This is necessary when installing this project from a .whl package, since the executable
-        # only gets execute by python and not by streamlit.
-
-        st_bootstrap.run(
-            __file__,
-            command_line="",
-            args=[],
-            flag_options={},
-        )
 
 if __name__ == "__main__":
-    start_app()
+    main()

@@ -8,7 +8,7 @@ class CrawlingTargetPage(str, Enum):
     OPENART = "openart.ai"
 
 @dataclass
-class MidjourneyImage:
+class AIImage:
     image_url: str
     prompt: str
 
@@ -18,7 +18,7 @@ class CrawlingRequest:
 
 @dataclass
 class CrawlingData:
-    midjourney_images: List[MidjourneyImage] = field(default_factory=list)  # crawled midjourney images
+    images: List[AIImage] = field(default_factory=list)  # crawled gen AI images
 
 @dataclass
 class Status:
