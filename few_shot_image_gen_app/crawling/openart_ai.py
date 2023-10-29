@@ -95,7 +95,7 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
                 with suppress(IndexError):
                     gridcells.append(grid_column[i])
 
-    # 3. Extract image and prompt data
+    # 3. Extract image and prompt templates
     progress_left = progress_max - progress
     print(f"Found {len(gridcells)} gridcells with potential image and prompt pairs. {len(columns)} columns, {len(grid_columns)} grid_columns")
     for i, gridcell in enumerate(gridcells):
@@ -190,7 +190,7 @@ def crawl_openartai(crawling_tab):
 def crawl_openartai_similar_images(crawling_tab, image_nr):
     progress_text = "Crawling Midjourney images"
     crawling_progress_bar = crawling_tab.progress(0, text=progress_text)
-    # Get session data
+    # Get session templates
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
     midjourney_image: AIImage = session_state.crawling_data.images[image_nr]
