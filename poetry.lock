@@ -997,14 +997,14 @@ requests = ">=2,<3"
 
 [[package]]
 name = "llm-few-shot-gen"
-version = "0.0.3"
+version = "0.1.1"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "llm_few_shot_gen-0.0.3-py3-none-any.whl", hash = "sha256:74ba305069a3356e0d7d04279d2f65bc07a4e53c6b5197beee7a2ee4e08264d7"},
-    {file = "llm_few_shot_gen-0.0.3.tar.gz", hash = "sha256:07b76a7d701b545645b16cbdaa2f43e846ecbb8cab84fa923a4f39d974666f47"},
+    {file = "llm_few_shot_gen-0.1.1-py3-none-any.whl", hash = "sha256:e444e596ea91b47095508fcaf15feef216673f0bd374003d80a078b3c37c7cc2"},
+    {file = "llm_few_shot_gen-0.1.1.tar.gz", hash = "sha256:d338ddac45d290b652ef935ebf828cfafe1a68944cec9a80755b4aa06f8d8fe9"},
 ]
 
 [package.dependencies]
@@ -3062,4 +3062,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d852cd5385726abcab175286a89e04e35432b8c29b4077f137cbc0ac537b85c9"
+content-hash = "b55a0477f0630a639eb9541323a9b9516764bdcdf38ea3544f44f057b8afaada"

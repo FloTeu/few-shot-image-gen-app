@@ -8,7 +8,7 @@ packages = [{include = "few_shot_image_gen_app"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-llm-few-shot-gen = "^0.0.3"
+llm-few-shot-gen = "0.1.1"
 streamlit = "1.28.0"
 requests = "~2.31.0"
 openai = "~0.27.0"
