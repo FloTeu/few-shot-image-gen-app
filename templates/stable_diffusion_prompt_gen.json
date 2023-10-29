@@ -1,0 +1,11 @@
+{
+  "role": "You are a helpful assistant.",
+  "instruction": "Your task is to help create text-to-image prompts for Stable Diffusion XL Image AI.",
+  "context": "Here is some context about how to create a good text-to-image prompt delimited by ###. ###\nA good prompt needs to be detailed and specific. A good process is to look through a list of keyword categories and decide whether you want to use any of them.\n\nThe keyword categories are\n\nSubject\nMedium\nStyle\nArtist\nWebsite\nResolution\nAdditional details\nColor\nLighting\nAn extensive list of keywords from each category is available in the prompt generator. You can also find a short list here.\n\nYou don’t have to include keywords from all categories. Treat them as a checklist to remind you what could be used.\n###",
+  "examples": {
+    "intro": "Here are some example prompts. Try to understand the underlying format of prompts in order to create new creative prompts yourself later. ",
+    "human_ai_interaction": [
+    ]
+  },
+  "input": "\nComplete the following tasks in the right order:\n1. Try to extract the overarching styles or artists from the example prompts given to you by the instructor. Please only extract them if they appear in at least one example prompt.\n2. Write five concise english prompts with the content \"{text}\". Your suggestions should include your found styles or artists of step 1 and use the same patterns as the example prompts."
+}

@@ -4,9 +4,10 @@ from typing import List
 import streamlit as st
 from PIL import Image
 from langchain.chat_models import ChatOpenAI
-from llm_few_shot_gen.generators import MidjourneyPromptGenerator
-from llm_few_shot_gen.models.output import ImagePromptOutputModel
 
+from llm_few_shot_gen.generators import ParsablePromptEngineeringGenerator
+from llm_few_shot_gen.models.output import ImagePromptOutputModel
+from llm_few_shot_gen.models.prompt_engineering import PEFewShotExample
 from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration
 from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion
 
@@ -67,19 +68,31 @@ def display_prompt_generation_tab(midjourney_images):
         prompt_generator = session_state.image_generation_data.prompt_generator
         with expander:
             markdown = "# Prompt for Text-to-Image Prompt Generation\n"
-            markdown += "## 1. Instruction\n"
-            markdown += prompt_generator.messages.instruction.format().content
+            markdown += "## 1. Role\n"
+            markdown += prompt_generator.prompt_elements.role
             markdown += "\n"
-            markdown += "## 2. Context\n"
-            for context_msg in prompt_generator.messages.context:
-                markdown += context_msg.format().content
+            markdown += "## 2. Instruction\n"
+            markdown += prompt_generator.prompt_elements.instruction
+            markdown += "\n"
+            markdown += "## 3. Context\n"
+            markdown += prompt_generator.prompt_elements.context
+            markdown += "\n"
+            markdown += "## 4. Output\n"
+            markdown += prompt_generator.prompt_elements.output_format
+            markdown += "\n"
+            markdown += "## 5. Few Shot Examples\n"
+            if prompt_generator.prompt_elements.examples.intro:
+                markdown += prompt_generator.prompt_elements.examples.intro
                 markdown += "\n"
-            markdown += "## 3. Few Shot Examples\n"
-            for example_msg in prompt_generator.messages.few_shot_examples:
-                markdown += example_msg.format().content
+            for example in prompt_generator.prompt_elements.examples.human_ai_interaction:
+                if example.human:
+                    markdown += ("Human: " + example.human)
                 markdown += "\n"
-            markdown += "## 4. Input Output\n"
-            markdown += prompt_generator.messages.io_prompt.format(text=st.session_state["prompt_gen_input"]).content
+                markdown += ("AI: " + example.ai)
+                markdown += "\n"
+                markdown += "\n"
+            markdown += "## 6. Input\n"
+            markdown += prompt_generator.prompt_elements.input.replace("text",st.session_state["prompt_gen_input"])
             markdown += "\n"
             # Display Markdown
             st.markdown(markdown)
@@ -90,12 +103,16 @@ def generate_image_model_prompts(prompts: List[str], tab_prompt_gen) -> ImagePro
     with tab_prompt_gen:
         with st.spinner('Wait for prompt generation'):
             llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name="gpt-3.5-turbo")
-            midjourney_prompt_gen = MidjourneyPromptGenerator(llm, pydantic_cls=ImagePromptOutputModel)
-            midjourney_prompt_gen.set_few_shot_examples(prompts)
-            llm_output = midjourney_prompt_gen.generate(text=st.session_state["prompt_gen_input"])
+            prompt_gen = ParsablePromptEngineeringGenerator.from_json("templates/stable_diffusion_prompt_gen.json", llm=llm, pydantic_cls=ImagePromptOutputModel)
+            # Overwrite few shot examples
+            human_ai_interaction = []
+            for prompt in prompts:
+                human_ai_interaction.append(PEFewShotExample(ai=prompt))
+            prompt_gen.prompt_elements.examples.human_ai_interaction = human_ai_interaction
+            llm_output = prompt_gen.generate(text=st.session_state["prompt_gen_input"])
     # store results into session object
     session_state: SessionState = st.session_state["session_state"]
-    session_state.image_generation_data.prompt_generator = midjourney_prompt_gen
+    session_state.image_generation_data.prompt_generator = prompt_gen
     session_state.image_generation_data.prompt_gen_llm_output = llm_output
     return llm_output
 
