@@ -101,7 +101,7 @@ def display_prompt_generation_tab(midjourney_images):
             st.markdown(markdown2)
 
 
-def generate_image_model_prompts(prompts: List[str], tab_prompt_gen) -> ImagePromptOutputModel:
+def generate_image_model_prompts(prompts: List[str], tab_prompt_gen):
     print("Generate image prompts with few shots", prompts)
     with tab_prompt_gen:
         with st.spinner('Wait for prompt generation'):
@@ -112,12 +112,15 @@ def generate_image_model_prompts(prompts: List[str], tab_prompt_gen) -> ImagePro
             for prompt in prompts:
                 human_ai_interaction.append(PEFewShotExample(ai=prompt))
             prompt_gen.prompt_elements.examples.human_ai_interaction = human_ai_interaction
-            llm_output = prompt_gen.generate(text=st.session_state["prompt_gen_input"])
+            try:
+                llm_output = prompt_gen.generate(text=st.session_state["prompt_gen_input"])
+            except Exception as e:
+                st.warning("Something went wrong during prompt generation. Please try again.")
+                return None
     # store results into session object
     session_state: SessionState = st.session_state["session_state"]
     session_state.image_generation_data.prompt_generator = prompt_gen
     session_state.image_generation_data.prompt_gen_llm_output = llm_output
-    return llm_output
 
 
 def display_image_gen_tab():
