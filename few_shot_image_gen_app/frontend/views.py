@@ -133,7 +133,11 @@ def display_image_gen_tab():
         image_ai_model = st.selectbox("Image GenAI Model", (ImageModelGeneration.STABLE_DIFFUSION.value, ""))
         if st.button("Generate Image", key="Image Gen Button"):
             with st.spinner('Image generation...'):
-                image = generate_with_stable_diffusion(prompt)
+                try:
+                    image = generate_with_stable_diffusion(prompt)
+                except Exception as e:
+                    print(str(e))
+                    st.warning("Something went wrong during image generation. Please try again.")
                 session_state.image_generation_data.gen_image_pil = image
         else:
             image: Image | None = session_state.image_generation_data.gen_image_pil
