@@ -139,6 +139,7 @@ def display_image_gen_tab():
                 except Exception as e:
                     print(str(e))
                     st.warning("Something went wrong during image generation. Please try again.")
+                    image: Image | None = session_state.image_generation_data.gen_image_pil
         else:
             image: Image | None = session_state.image_generation_data.gen_image_pil
 
