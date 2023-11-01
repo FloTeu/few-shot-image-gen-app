@@ -1,4 +1,5 @@
 import math
+import json
 from typing import List
 
 import streamlit as st
@@ -10,6 +11,7 @@ from llm_few_shot_gen.models.output import ImagePromptOutputModel
 from llm_few_shot_gen.models.prompt_engineering import PEFewShotExample
 from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration
 from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion
+from few_shot_image_gen_app.utils import extract_json_from_text
 
 
 MAX_IMAGES_PER_ROW = 4
@@ -68,34 +70,36 @@ def display_prompt_generation_tab(midjourney_images):
         prompt_generator = session_state.image_generation_data.prompt_generator
         with expander:
             markdown = "# Prompt for Text-to-Image Prompt Generation\n"
+            markdown2 = ""
             markdown += "## 1. Role\n"
-            markdown += prompt_generator.prompt_elements.role
+            markdown += prompt_generator.prompt_elements.role.replace("helpful assistant", ":green[helpful assistant]")
             markdown += "\n"
             markdown += "## 2. Instruction\n"
-            markdown += prompt_generator.prompt_elements.instruction
+            markdown += prompt_generator.prompt_elements.instruction.replace("create text-to-image prompts", ":green[create text-to-image prompts]")
             markdown += "\n"
             markdown += "## 3. Context\n"
-            markdown += prompt_generator.prompt_elements.context
+            markdown += prompt_generator.prompt_elements.context.replace("detailed and specific", ":green[detailed and specific]").replace("categories", ":green[categories]")
             markdown += "\n"
             markdown += "## 4. Output\n"
-            markdown += prompt_generator.prompt_elements.output_format
-            markdown += "\n"
-            markdown += "## 5. Few Shot Examples\n"
+            pydantic_format = extract_json_from_text(prompt_generator.prompt_elements.output_format)
+            markdown += prompt_generator.prompt_elements.output_format.replace("JSON schema", ":green[JSON schema]").replace(json.dumps(pydantic_format), "").replace("```","")
+            markdown2 += "## 5. Few Shot Examples\n"
             if prompt_generator.prompt_elements.examples.intro:
-                markdown += prompt_generator.prompt_elements.examples.intro
-                markdown += "\n"
+                markdown2 += prompt_generator.prompt_elements.examples.intro.replace("underlying format", ":green[underlying format]")
+                markdown2 += "\n"
             for example in prompt_generator.prompt_elements.examples.human_ai_interaction:
                 if example.human:
-                    markdown += ("Human: " + example.human)
-                markdown += "\n"
-                markdown += ("AI: " + example.ai)
-                markdown += "\n"
-                markdown += "\n"
-            markdown += "## 6. Input\n"
-            markdown += prompt_generator.prompt_elements.input.replace("text",st.session_state["prompt_gen_input"])
-            markdown += "\n"
+                    markdown2 += ("Human: " + example.human)
+                markdown2 += "\n"
+                markdown2 += (f"AI: :orange[{example.ai}]")
+                markdown2 += "\n\n"
+            markdown2 += "## 6. Input\n"
+            markdown2 += prompt_generator.prompt_elements.input.replace("{text}",f":orange[{st.session_state['prompt_gen_input']}]").replace("tasks", ":green[tasks]").replace("five concise english prompts", ":green[five concise english prompts]").replace("overarching styles or artists", ":green[overarching styles or artists]").replace("include your found styles or artists of step 1", ":green[include your found styles or artists of step 1]")
+            markdown2 += "\n"
             # Display Markdown
             st.markdown(markdown)
+            st.write(pydantic_format)
+            st.markdown(markdown2)
 
 
 def generate_image_model_prompts(prompts: List[str], tab_prompt_gen) -> ImagePromptOutputModel:
