@@ -135,10 +135,10 @@ def display_image_gen_tab():
             with st.spinner('Image generation...'):
                 try:
                     image = generate_with_stable_diffusion(prompt)
+                    session_state.image_generation_data.gen_image_pil = image
                 except Exception as e:
                     print(str(e))
                     st.warning("Something went wrong during image generation. Please try again.")
-                session_state.image_generation_data.gen_image_pil = image
         else:
             image: Image | None = session_state.image_generation_data.gen_image_pil
 
