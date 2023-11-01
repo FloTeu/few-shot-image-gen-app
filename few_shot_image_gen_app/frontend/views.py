@@ -6,13 +6,12 @@ import streamlit as st
 from PIL import Image
 from langchain.chat_models import ChatOpenAI
 
-from llm_few_shot_gen.generators import ParsablePromptEngineeringGenerator
-from llm_few_shot_gen.models.output import ImagePromptOutputModel
-from llm_few_shot_gen.models.prompt_engineering import PEFewShotExample
+from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
+from llm_prompting_gen.models.prompt_engineering import PEFewShotExample
+from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
 from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration
 from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion
 from few_shot_image_gen_app.utils import extract_json_from_text
-
 
 MAX_IMAGES_PER_ROW = 4
 

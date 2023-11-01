@@ -1,6 +1,6 @@
 from few_shot_image_gen_app.selenium_fns import SeleniumBrowser
-from llm_few_shot_gen.models.output import ImagePromptOutputModel
-from llm_few_shot_gen.generators import ParsablePromptEngineeringGenerator
+from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
+from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 from dataclasses import dataclass, field
 from typing import List, Optional
 from enum import Enum
