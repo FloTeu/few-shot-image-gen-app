@@ -7,7 +7,7 @@ from PIL import Image
 from langchain.chat_models import ChatOpenAI
 
 from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
-from llm_prompting_gen.models.prompt_engineering import PEFewShotExample
+from llm_prompting_gen.models.prompt_engineering import FewShotHumanAIExample
 from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
 from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration
 from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion
@@ -83,14 +83,14 @@ def display_prompt_generation_tab(midjourney_images):
             pydantic_format = extract_json_from_text(prompt_generator.prompt_elements.output_format)
             markdown += prompt_generator.prompt_elements.output_format.replace("JSON schema", ":green[JSON schema]").replace(json.dumps(pydantic_format), "").replace("```","")
             markdown2 += "## 5. Few Shot Examples\n"
-            if prompt_generator.prompt_elements.examples.intro:
-                markdown2 += prompt_generator.prompt_elements.examples.intro.replace("underlying format", ":green[underlying format]")
+            if prompt_generator.prompt_elements.examples_intro:
+                markdown2 += prompt_generator.prompt_elements.examples_intro.replace("underlying format", ":green[underlying format]")
                 markdown2 += "\n"
-            for example in prompt_generator.prompt_elements.examples.human_ai_interaction:
-                if example.human:
-                    markdown2 += ("Human: " + example.human)
+            system_message = prompt_generator.prompt_elements.get_example_msg_prompt_template()
+            #markdown2 += (f":orange[{system_message}]")
+            for example in system_message.prompt.template.split("\n"):
                 markdown2 += "\n"
-                markdown2 += (f"AI: :orange[{example.ai}]")
+                markdown2 += (f":orange[{example}]")
                 markdown2 += "\n\n"
             markdown2 += "## 6. Input\n"
             markdown2 += prompt_generator.prompt_elements.input.replace("{text}",f":orange[{st.session_state['prompt_gen_input']}]").replace("tasks", ":green[tasks]").replace("five concise english prompts", ":green[five concise english prompts]").replace("overarching styles or artists", ":green[overarching styles or artists]").replace("include your found styles or artists of step 1", ":green[include your found styles or artists of step 1]")
@@ -108,10 +108,10 @@ def generate_image_model_prompts(prompts: List[str], tab_prompt_gen):
             llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name="gpt-3.5-turbo")
             prompt_gen = ParsablePromptEngineeringGenerator.from_json("templates/stable_diffusion_prompt_gen.json", llm=llm, pydantic_cls=ImagePromptOutputModel)
             # Overwrite few shot examples
-            human_ai_interaction = []
-            for prompt in prompts:
-                human_ai_interaction.append(PEFewShotExample(ai=prompt))
-            prompt_gen.prompt_elements.examples.human_ai_interaction = human_ai_interaction
+            # human_ai_interaction = []
+            # for prompt in prompts:
+            #     human_ai_interaction.append(FewShotHumanAIExample(ai=prompt))
+            prompt_gen.prompt_elements.examples = prompts
             try:
                 llm_output = prompt_gen.generate(text=st.session_state["prompt_gen_input"])
             except Exception as e:
