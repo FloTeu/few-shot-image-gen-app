@@ -129,34 +129,35 @@ def display_image_gen_tab():
 
     st.subheader("Image Generation Prompt")
     llm_output: ImagePromptOutputModel | None = session_state.image_generation_data.prompt_gen_llm_output
+    prompt_suggestion = ""
     if llm_output:
         prompt_suggestion = st.selectbox("Generated Prompts", llm_output.image_prompts)
-        prompt = st.text_area("Prompt", value=prompt_suggestion)
-        # Atm only SDXL is available
-        image_ai_model = st.selectbox("Image GenAI Model", (ImageModelGeneration.STABLE_DIFFUSION.value, ImageModelGeneration.STABLE_DIFFUSION_CUSTOM.value, ImageModelGeneration.DALLE_3.value))
-        lora_tar_url = None
-        if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
-            lora_tar_url = st.text_input("LoRa .tar url", help='Train you custom model here: "https://replicate.com/zylim0702/sdxl-lora-customize-training" and copy the download url of the .tar file')
-            token_prefix = st.text_input("Token prefix", value="a photo of TOK, ", help='Contains the unique string which was used during training to refer the concept of the input images')
-        if st.button("Generate Image", key="Image Gen Button"):
-            with st.spinner('Image generation...'):
-                try:
-                    if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION:
-                        image = generate_with_stable_diffusion(prompt)
-                    elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
-                        if not lora_tar_url:
-                            st.warning("Set 'lora_tar_url' please")
-                        else:
-                            image = generate_with_stable_diffusion_custom(f"{token_prefix}{prompt}", lora_tar_url)
-                    elif image_ai_model == ImageModelGeneration.DALLE_3:
-                        image = generate_with_dalle3(prompt)
-                    session_state.image_generation_data.gen_image_pil = image
-                except Exception as e:
-                    print("Exception during image generation", str(e))
-                    st.warning("Something went wrong during image generation. Please try again.")
-                    image: Image | None = session_state.image_generation_data.gen_image_pil
-        else:
-            image: Image | None = session_state.image_generation_data.gen_image_pil
+    prompt = st.text_area("Prompt", value=prompt_suggestion)
+    # Atm only SDXL is available
+    image_ai_model = st.selectbox("Image GenAI Model", (ImageModelGeneration.STABLE_DIFFUSION.value, ImageModelGeneration.STABLE_DIFFUSION_CUSTOM.value, ImageModelGeneration.DALLE_3.value))
+    lora_tar_url = None
+    if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
+        lora_tar_url = st.text_input("LoRa .tar url", help='Train you custom model here: "https://replicate.com/zylim0702/sdxl-lora-customize-training" and copy the download url of the .tar file')
+        token_prefix = st.text_input("Token prefix", value="a photo of TOK, ", help='Contains the unique string which was used during training to refer the concept of the input images')
+    if st.button("Generate Image", key="Image Gen Button"):
+        with st.spinner('Image generation...'):
+            try:
+                if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION:
+                    image = generate_with_stable_diffusion(prompt)
+                elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
+                    if not lora_tar_url:
+                        st.warning("Set 'lora_tar_url' please")
+                    else:
+                        image = generate_with_stable_diffusion_custom(f"{token_prefix}{prompt}", lora_tar_url)
+                elif image_ai_model == ImageModelGeneration.DALLE_3:
+                    image = generate_with_dalle3(prompt)
+                session_state.image_generation_data.gen_image_pil = image
+            except Exception as e:
+                print("Exception during image generation", str(e))
+                st.warning("Something went wrong during image generation. Please try again.")
+                image: Image | None = session_state.image_generation_data.gen_image_pil
+    else:
+        image: Image | None = session_state.image_generation_data.gen_image_pil
 
-        if image:
-            st.image(image, width=512)
+    if image:
+        st.image(image, width=512)
