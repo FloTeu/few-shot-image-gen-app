@@ -17,6 +17,8 @@ class ImageModelCrawling(str, Enum):
 
 class ImageModelGeneration(str, Enum):
     STABLE_DIFFUSION = "Stable Diffusion (SDXL)"
+    STABLE_DIFFUSION_CUSTOM = "Stable Diffusion LoRa"
+    DALLE_3 = "DALL-E 3"
 
 @dataclass
 class AIImage:

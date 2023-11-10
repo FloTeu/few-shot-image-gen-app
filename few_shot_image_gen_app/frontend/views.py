@@ -10,7 +10,7 @@ from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 from llm_prompting_gen.models.prompt_engineering import FewShotHumanAIExample
 from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
 from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration
-from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion
+from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion, generate_with_stable_diffusion_custom, generate_with_dalle3
 from few_shot_image_gen_app.utils import extract_json_from_text
 
 MAX_IMAGES_PER_ROW = 4
@@ -115,6 +115,7 @@ def generate_image_model_prompts(prompts: List[str], tab_prompt_gen):
             try:
                 llm_output = prompt_gen.generate(text=st.session_state["prompt_gen_input"])
             except Exception as e:
+                print("Exception during prompt generation", str(e))
                 st.warning("Something went wrong during prompt generation. Please try again.")
                 return None
     # store results into session object
@@ -132,14 +133,26 @@ def display_image_gen_tab():
         prompt_suggestion = st.selectbox("Generated Prompts", llm_output.image_prompts)
         prompt = st.text_area("Prompt", value=prompt_suggestion)
         # Atm only SDXL is available
-        image_ai_model = st.selectbox("Image GenAI Model", (ImageModelGeneration.STABLE_DIFFUSION.value, ""))
+        image_ai_model = st.selectbox("Image GenAI Model", (ImageModelGeneration.STABLE_DIFFUSION.value, ImageModelGeneration.STABLE_DIFFUSION_CUSTOM.value, ImageModelGeneration.DALLE_3.value))
+        lora_tar_url = None
+        if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
+            lora_tar_url = st.text_input("LoRa .tar url", help='Train you custom model here: "https://replicate.com/zylim0702/sdxl-lora-customize-training" and copy the download url of the .tar file')
+            token_prefix = st.text_input("Token prefix", value="a photo of TOK, ", help='Contains the unique string which was used during training to refer the concept of the input images')
         if st.button("Generate Image", key="Image Gen Button"):
             with st.spinner('Image generation...'):
                 try:
-                    image = generate_with_stable_diffusion(prompt)
+                    if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION:
+                        image = generate_with_stable_diffusion(prompt)
+                    elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
+                        if not lora_tar_url:
+                            st.warning("Set 'lora_tar_url' please")
+                        else:
+                            image = generate_with_stable_diffusion_custom(f"{token_prefix}{prompt}", lora_tar_url)
+                    elif image_ai_model == ImageModelGeneration.DALLE_3:
+                        image = generate_with_dalle3(prompt)
                     session_state.image_generation_data.gen_image_pil = image
                 except Exception as e:
-                    print(str(e))
+                    print("Exception during image generation", str(e))
                     st.warning("Something went wrong during image generation. Please try again.")
                     image: Image | None = session_state.image_generation_data.gen_image_pil
         else:
