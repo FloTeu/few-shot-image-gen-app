@@ -38,9 +38,14 @@ def generate_with_stable_diffusion(prompt: str) -> Image:
     return replicate_generate(model, {"prompt": prompt, "apply_watermark": False}, output_format=OutputFormat.GENERATOR)
 
 
-def generate_with_stable_diffusion_custom(prompt: str, lora_url: str) -> Image:
+def generate_with_stable_diffusion_custom_lora(prompt: str, lora_url: str) -> Image:
     model = "zylim0702/sdxl-lora-customize-model:5a2b1cff79a2cf60d2a498b424795a90e26b7a3992fbd13b340f73ff4942b81e"
     return replicate_generate(model, {"prompt": prompt, "Lora_url": lora_url}, output_format=OutputFormat.GENERATOR)
+
+
+def generate_with_stable_diffusion_custom_trained(prompt: str, model_version_url: str) -> Image:
+    """Trained via replicate platform"""
+    return replicate_generate(model_version_url, {"prompt": prompt}, output_format=OutputFormat.GENERATOR)
 
 
 def generate_with_dalle3(prompt: str, quality: OpenAIImageQuality = OpenAIImageQuality.STANDARD) -> Image:

@@ -9,8 +9,8 @@ from langchain.chat_models import ChatOpenAI
 from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
 from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration
-from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion, generate_with_stable_diffusion_custom, \
-    generate_with_dalle3
+from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion, generate_with_stable_diffusion_custom_lora, \
+    generate_with_dalle3, generate_with_stable_diffusion_custom_trained
 from few_shot_image_gen_app.utils import extract_json_from_text
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
 
@@ -156,12 +156,19 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
     prompt = st.text_area("Prompt", value=prompt_suggestion)
     # Atm only SDXL is available
     image_ai_model = st.selectbox("Image GenAI Model", (
-        ImageModelGeneration.STABLE_DIFFUSION.value, ImageModelGeneration.STABLE_DIFFUSION_CUSTOM.value,
+        ImageModelGeneration.STABLE_DIFFUSION.value,
+        ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA.value,
+        ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE.value,
         ImageModelGeneration.DALLE_3.value))
     lora_tar_url = None
-    if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
+    if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA:
         lora_tar_url = st.text_input("LoRa .tar url",
                                      help='Train you custom model here: "https://replicate.com/zylim0702/sdxl-lora-customize-training" and copy the download url of the .tar file')
+        token_prefix = st.text_input("Token prefix", value="a photo of TOK, ",
+                                     help='Contains the unique string which was used during training to refer the concept of the input images')
+    elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE:
+        model_version_url = st.text_input("Replicate model version url", value="fofr/sdxl-emoji:e6484351b3c943cbd507d938df8abc598cb05c44f4e67ee82be0beea5f495f31",
+                                     help='Train you custom model here: "https://replicate.com/blog/fine-tune-sdxl" and copy the model version url')
         token_prefix = st.text_input("Token prefix", value="a photo of TOK, ",
                                      help='Contains the unique string which was used during training to refer the concept of the input images')
     if st.button("Generate Image", key="Image Gen Button"):
@@ -171,11 +178,16 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
             try:
                 if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION:
                     image = generate_with_stable_diffusion(prompt)
-                elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM:
+                elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA:
                     if not lora_tar_url:
                         st.warning("Set 'lora_tar_url' please")
                     else:
-                        image = generate_with_stable_diffusion_custom(f"{token_prefix}{prompt}", lora_tar_url)
+                        image = generate_with_stable_diffusion_custom_lora(f"{token_prefix}{prompt}", lora_tar_url)
+                elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE:
+                    if not model_version_url:
+                        st.warning("Set 'model_version_url' please")
+                    else:
+                        image = generate_with_stable_diffusion_custom_trained(f"{token_prefix}{prompt}", model_version_url)
                 elif image_ai_model == ImageModelGeneration.DALLE_3:
                     image = generate_with_dalle3(prompt)
                 session_state.image_generation_data.gen_image_pil = image
