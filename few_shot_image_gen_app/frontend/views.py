@@ -8,7 +8,7 @@ from langchain.chat_models import ChatOpenAI
 
 from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
-from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration
+from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration, PromptGenerationModel
 from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion, generate_with_stable_diffusion_custom_lora, \
     generate_with_dalle3, generate_with_stable_diffusion_custom_trained
 from few_shot_image_gen_app.utils import extract_json_from_text
@@ -119,7 +119,8 @@ def generate_image_model_prompts(prompts: List[str], tab_prompt_gen):
     print("Generate image prompts with few shots", prompts)
     with tab_prompt_gen:
         with st.spinner('Wait for prompt generation'):
-            llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name="gpt-3.5-turbo")
+            model_name = "gpt-3.5-turbo-1106" if st.session_state["llm_model"] == PromptGenerationModel.GPT_35 else "gpt-4-1106-preview"
+            llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name=model_name)
             prompt_gen = ParsablePromptEngineeringGenerator.from_json("templates/stable_diffusion_prompt_gen.json",
                                                                       llm=llm, pydantic_cls=ImagePromptOutputModel)
             # Overwrite few shot examples

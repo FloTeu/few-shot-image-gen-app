@@ -5,7 +5,7 @@ import streamlit as st
 from few_shot_image_gen_app.frontend.views import display_crawled_ai_images, generate_image_model_prompts
 from few_shot_image_gen_app.crawling.midjourney import login_to_midjourney, crawl_midjourney
 from few_shot_image_gen_app.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
-from few_shot_image_gen_app.data_classes import CrawlingTargetPage, ImageModelCrawling, SessionState
+from few_shot_image_gen_app.data_classes import CrawlingTargetPage, ImageModelCrawling, SessionState, PromptGenerationModel
 from few_shot_image_gen_app.session import update_request
 
 
@@ -47,11 +47,13 @@ def display_sidebar(tab_crawling, tab_prompt_gen):
 
     if "session_state" in st.session_state:
         session_state: SessionState = st.session_state["session_state"]
-        st.sidebar.subheader("2. Prompt Generation")
-        ai_images = session_state.crawling_data.images
-        st.sidebar.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
-        selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:",
-                                                  [i + 1 for i in range(len(ai_images))], key='selected_prompts')
-        prompts = [mid_img.prompt for i, mid_img in enumerate(ai_images) if (i + 1) in selected_prompts]
-        st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
-        st.sidebar.button("Prompt Generation", on_click=generate_image_model_prompts, args=(prompts, tab_prompt_gen,), key="button_prompt_generation")
+        with st.sidebar:
+            st.subheader("2. Prompt Generation")
+            ai_images = session_state.crawling_data.images
+            st.selectbox("LLM Model", (PromptGenerationModel.GPT_35.value, PromptGenerationModel.GPT_4.value), key="llm_model")
+            st.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
+            selected_prompts = st.multiselect("Select Designs for prompt generation:",
+                                                      [i + 1 for i in range(len(ai_images))], key='selected_prompts')
+            prompts = [mid_img.prompt for i, mid_img in enumerate(ai_images) if (i + 1) in selected_prompts]
+            st.text_input("Prompt Gen Input", key="prompt_gen_input")
+            st.button("Prompt Generation", on_click=generate_image_model_prompts, args=(prompts, tab_prompt_gen,), key="button_prompt_generation")

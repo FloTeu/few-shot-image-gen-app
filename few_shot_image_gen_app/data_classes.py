@@ -21,6 +21,11 @@ class ImageModelGeneration(str, Enum):
     STABLE_DIFFUSION_CUSTOM_REPLICATE = "Stable Diffusion Replicate Training"
     DALLE_3 = "DALL-E 3"
 
+
+class PromptGenerationModel(str, Enum):
+    GPT_35 = "GPT 3-5 (ChatGPT)"
+    GPT_4 = "GPT 4"
+
 @dataclass
 class AIImage:
     image_url: str
