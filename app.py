@@ -12,7 +12,7 @@ init_environment()
 
 
 st.set_page_config(
-    page_title="Midjourney Prompt Generator",
+    page_title="Image Gen AI Prompt Generator",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -23,14 +23,14 @@ def main():
     st.caption('“If you can imagine it, you can generate it” - Runway Gen-2 commercial')
 
     st.write("Streamlit application for a showcase of the [LLM Few Shot Generator Library](https://github.com/FloTeu/llm-few-shot-generator). \n"
-             "The app allows you to extract sample prompts from openart.ai website. A subsample of these prompts can then be used to generate new prompts for ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
+             "The app allows you to extract sample prompts from openart.ai website. A subsample of these prompts can then be used to generate new prompts with help of ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
     st.write("[Source code frontend](https://github.com/FloTeu/few-shot-image-gen-app)")
     st.write("[Source code backend](https://github.com/FloTeu/llm-few-shot-generator)")
 
     with st.expander("Example"):
         st.write("""
-            Text Prompt Input: "Grandma" \n
-            Midjourney Prompt Generator output images:
+            Text prompt input: "Grandma" \n
+            Image gen ai output images:
         """)
         st.image("assets/grandmas.jpg")
 
