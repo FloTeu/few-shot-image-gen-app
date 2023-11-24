@@ -73,7 +73,7 @@ def display_prompt_generation_tab(midjourney_images):
             markdown = "# Prompt for Text-to-Image Prompt Generation\n"
             markdown2 = ""
             markdown += "## 1. Role\n"
-            markdown += prompt_generator.prompt_elements.role.replace("helpful assistant", ":green[helpful assistant]")
+            markdown += prompt_generator.prompt_elements.role.replace("image prompt generator", ":green[image prompt generator]")
             markdown += "\n"
             markdown += "## 2. Instruction\n"
             markdown += prompt_generator.prompt_elements.instruction.replace("create text-to-image prompts",
@@ -82,7 +82,8 @@ def display_prompt_generation_tab(midjourney_images):
             markdown += "## 3. Context\n"
             markdown += prompt_generator.prompt_elements.context.replace("detailed and specific",
                                                                          ":green[detailed and specific]").replace(
-                "categories", ":green[categories]")
+                "categories", ":green[categories]").replace(
+                "+++", ":green[+++]")
             markdown += "\n"
             markdown += "## 4. Output\n"
             pydantic_format = extract_json_from_text(prompt_generator.prompt_elements.output_format)
