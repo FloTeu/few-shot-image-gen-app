@@ -20,8 +20,8 @@ def display_sidebar(tab_crawling, tab_prompt_gen):
         st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""),
                               key="mid_password")
         st.sidebar.button("Login", on_click=login_to_midjourney, key="button_midjourney_login")
-    if target_page == CrawlingTargetPage.OPENART:
-        st.sidebar.toggle("Community Only", value=False, help="Ensures image was uploaded with a community account", key="community_only")
+    # if target_page == CrawlingTargetPage.OPENART:
+    #     st.sidebar.toggle("Community Only", value=False, help="Ensures image was uploaded with a community account", key="community_only")
 
     # Crawling Request
     st.sidebar.multiselect("Image AI Target Prompts",
@@ -32,8 +32,8 @@ def display_sidebar(tab_crawling, tab_prompt_gen):
     if st.sidebar.button("Start Crawling",
                          on_click=crawl_openartai if target_page == CrawlingTargetPage.OPENART else crawl_midjourney,
                          args=(tab_crawling,), key="button_midjourney_crawling"):
-        session_state: SessionState = st.session_state["session_state"]
-        display_crawled_ai_images(session_state.crawling_data.images, make_collapsable=False)
+        #session_state: SessionState = st.session_state["session_state"]
+        #display_crawled_ai_images(session_state.crawling_data.images, make_collapsable=False)
         tab_crawling.info('Please go to "Prompt Generation" tab')
     # Crawl similar images
     if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(

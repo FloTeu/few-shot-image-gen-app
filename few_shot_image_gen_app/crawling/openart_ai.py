@@ -30,7 +30,7 @@ def get_discovery_url(search_term: str, image_models: List[ImageModelCrawling], 
     # encode to url format
     search_models = urllib.parse.quote_plus(",".join(search_models))
     search_term = urllib.parse.quote_plus(search_term)
-    return f"https://openart.ai/search/{search_term}?searchType={search_type}&searchModel={search_models}"
+    return f"https://openart.ai/search/{search_term}?searchType={search_type}&ai_model={search_models}&method=prompt"
 
 def get_openartai_discovery(driver: WebDriver):
     driver.get("https://openart.ai/discovery")
@@ -111,10 +111,14 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
                 continue
             assert any(image_url.endswith(ending) for ending in [".webp", ".jpg", "jpeg", ".png"]) , f"image_url {image_url}, is not in the expected image format"
             # extract prompt from text area
-            text_elements = gridcell.find_elements(By.CLASS_NAME, "MuiTypography-body2")
-            # Assumption: Last text element is "remix" button, first one is optionally the user name (if existent)
-            text_list = [text_element.text for text_element in text_elements if not has_button_ancestor(text_element)]
-            prompt = text_list[-1]
+            ## Note: old way to extract prompt
+            # text_elements = gridcell.find_elements(By.CLASS_NAME, "MuiTypography-body2")
+            # # Assumption: Last text element is "remix" button, first one is optionally the user name (if existent)
+            # text_list = [text_element.text for text_element in text_elements if not has_button_ancestor(text_element)]
+            # prompt = text_list[-1]
+            ## Note: Prompt is now placed inside of image alt
+            prompt = image_element.get_attribute('alt').removeprefix("Prompt: ")
+
             if not check_if_image_exists(midjourney_images, image_url):
                 midjourney_images.append(AIImage(image_url=image_url, prompt=prompt))
             crawling_progress_bar.progress(int(progress + (progress_left * (i/len(gridcells)))), text="Crawling Midjourney images" + ": Crawling...")
@@ -152,7 +156,9 @@ def click_image(driver, prompt):
     # cut prompt to handle ' char
     prompt = prompt[:prompt.find("'")]
     #prompt_web_elements = driver.find_elements(By.XPATH, f"//span[text()='{prompt}']")
-    prompt_web_elements = driver.find_elements(By.XPATH, f"//*[contains(text(), '{prompt}')]")
+    #prompt_web_elements = driver.find_elements(By.XPATH, f"//*[contains(text(), '{prompt}')]")
+    prompt_web_elements = driver.find_elements(By.XPATH, f'//img[contains(@alt, "{prompt}")]')
+
     if len(prompt_web_elements) == 0:
         st.error("Could not find element. Please try another one.")
         return None
@@ -180,7 +186,7 @@ def crawl_openartai(crawling_tab):
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
     crawling_progress_bar.progress(20,text=progress_text + ": Search...")
-    discovery_url = get_discovery_url(session_state.crawling_request.search_term, session_state.crawling_request.image_ais, only_community=st.session_state["community_only"])
+    discovery_url = get_discovery_url(session_state.crawling_request.search_term, session_state.crawling_request.image_ais, only_community=False)
     driver.get(discovery_url)
     time.sleep(3)
     crawling_progress_bar.progress(50,text=progress_text + ": Crawling...")
