@@ -195,7 +195,10 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
                 session_state.image_generation_data.gen_image_pil = image
             except Exception as e:
                 print("Exception during image generation", str(e))
-                st.warning("Something went wrong during image generation. Please try again.")
+                if "NSFW" in str(e):
+                    st.warning("NSFW content detected. Try running it again, or try a different prompt.")
+                else:
+                    st.warning("Something went wrong during image generation. Please try again.")
 
     # Display image
     if image:
