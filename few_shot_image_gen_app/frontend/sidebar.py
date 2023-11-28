@@ -5,7 +5,7 @@ import streamlit as st
 from few_shot_image_gen_app.frontend.views import display_crawled_ai_images, generate_image_model_prompts
 from few_shot_image_gen_app.crawling.midjourney import login_to_midjourney, crawl_midjourney
 from few_shot_image_gen_app.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
-from few_shot_image_gen_app.data_classes import CrawlingTargetPage, ImageModelCrawling, SessionState, PromptGenerationModel
+from few_shot_image_gen_app.data_classes import CrawlingTargetPage, ImageModelCrawling, SessionState, PromptGenerationModel, SearchByCrawling
 from few_shot_image_gen_app.session import update_request
 
 
@@ -28,6 +28,9 @@ def display_sidebar(tab_crawling, tab_prompt_gen):
                            [ImageModelCrawling.STABLE_DIFFUSION.value, ImageModelCrawling.MIDJOURNEY.value,
                             ImageModelCrawling.DALLE_2.value], default=[ImageModelCrawling.STABLE_DIFFUSION.value],
                            key="image_models", on_change=update_request)
+    st.sidebar.selectbox("Search by",
+                           [SearchByCrawling.PROMPT.value, SearchByCrawling.IMAGE_SIMILARITY.value],
+                           key="search_by", on_change=update_request)
     st.sidebar.text_input("Search Term (e.g. art style)", key="search_term", on_change=update_request)
     if st.sidebar.button("Start Crawling",
                          on_click=crawl_openartai if target_page == CrawlingTargetPage.OPENART else crawl_midjourney,

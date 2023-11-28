@@ -27,10 +27,14 @@ def get_discovery_url(search_term: str, image_models: List[ImageModelCrawling], 
         if image_ai == ImageModelCrawling.MIDJOURNEY:
             search_models.append("md")
 
+    method = "prompt"
+    if "search_by" in st.session_state:
+        method = "prompt" if st.session_state["search_by"] == "Prompt" else "similarity"
+
     # encode to url format
     search_models = urllib.parse.quote_plus(",".join(search_models))
     search_term = urllib.parse.quote_plus(search_term)
-    return f"https://openart.ai/search/{search_term}?searchType={search_type}&ai_model={search_models}&method=prompt"
+    return f"https://openart.ai/search/{search_term}?searchType={search_type}&ai_model={search_models}&method={method}"
 
 def get_openartai_discovery(driver: WebDriver):
     driver.get("https://openart.ai/discovery")

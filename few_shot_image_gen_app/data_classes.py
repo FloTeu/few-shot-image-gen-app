@@ -10,6 +10,10 @@ class CrawlingTargetPage(str, Enum):
     MIDJOURNEY = "midjourney.com"
     OPENART = "openart.ai"
 
+class SearchByCrawling(str, Enum):
+    PROMPT = "Prompt"
+    IMAGE_SIMILARITY = "Image Similarity"
+
 class ImageModelCrawling(str, Enum):
     STABLE_DIFFUSION = "Stable Diffusion"
     MIDJOURNEY = "Midjourney"
