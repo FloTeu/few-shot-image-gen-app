@@ -51,8 +51,13 @@ class Status:
     prompts_generated: bool = False
 
 @dataclass
+class ImagePromptPair:
+    image_pil: PILImage.Image
+    prompt: str
+
+@dataclass
 class ImageGenerationData:
-    gen_image_pil: PILImage.Image | None = None
+    gen_image_prompt_list: List[ImagePromptPair] | None = None
     prompt_gen_llm_output: ImagePromptOutputModel | None = None
     prompt_generator: ParsablePromptEngineeringGenerator | None = None
 

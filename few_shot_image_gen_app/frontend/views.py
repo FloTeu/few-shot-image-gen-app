@@ -3,14 +3,13 @@ import json
 from typing import List
 
 import streamlit as st
-from PIL import Image
 from langchain.chat_models import ChatOpenAI
 
 from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
+
 from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
-from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration, PromptGenerationModel
-from few_shot_image_gen_app.image.generate import generate_with_stable_diffusion, generate_with_stable_diffusion_custom_lora, \
-    generate_with_dalle3, generate_with_stable_diffusion_custom_trained
+from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration, PromptGenerationModel, ImagePromptPair
+from few_shot_image_gen_app.image.generate import generate
 from few_shot_image_gen_app.utils import extract_json_from_text
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
 
@@ -145,8 +144,8 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
     """Display image generation view"""
 
     # Per default image is last generated image or None
-    image = (
-        st.session_state["session_state"].image_generation_data.gen_image_pil
+    images_and_prompts = (
+        st.session_state["session_state"].image_generation_data.gen_image_prompt_list
         if "session_state" in st.session_state
         else None
     )
@@ -163,6 +162,8 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
         ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE.value,
         ImageModelGeneration.DALLE_3.value))
     lora_tar_url = None
+    token_prefix = None
+    model_version_url = None
     if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA:
         lora_tar_url = st.text_input("LoRa .tar url",
                                      help='Train you custom model here: "https://replicate.com/zylim0702/sdxl-lora-customize-training" and copy the download url of the .tar file')
@@ -176,30 +177,61 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
     if st.button("Generate Image", key="Image Gen Button"):
         set_session_state_if_not_exists()
         session_state: SessionState = st.session_state["session_state"]
-        with st.spinner('Image generation...'):
+        new_images_and_prompts: List[ImagePromptPair] | None = validate_input_and_generate([prompt], image_ai_model, lora_tar_url, model_version_url, session_state,
+                                                                                  token_prefix)
+        images_and_prompts = new_images_and_prompts or images_and_prompts
+    if prompt_gen_llm_output and st.button("Generate all Prompts", key="Image Gen All Prompts Button"):
+        set_session_state_if_not_exists()
+        session_state: SessionState = st.session_state["session_state"]
+        new_images_and_prompts: List[ImagePromptPair] | None = validate_input_and_generate(prompt_gen_llm_output.image_prompts, image_ai_model, lora_tar_url, model_version_url, session_state,
+                                                                                  token_prefix)
+        images_and_prompts = new_images_and_prompts or images_and_prompts
+
+    # Display images with prompts
+    if images_and_prompts:
+        for image_and_prompt in images_and_prompts:
+            # Create a container for each image-prompt pair
+            with st.container():
+                # Use columns to layout the image and the prompt
+                col1, col2 = st.columns((2, 3))
+
+                # Display the image in the first column with a fixed width
+                with col1:
+                    st.image(image_and_prompt.image_pil, width=300)  # You can adjust the width as needed
+
+                # Display the prompt in the second column
+                with col2:
+                    st.markdown(f"## {image_and_prompt.prompt}")  # Increase the size of the prompt text
+                    st.write("")  # Optional: add extra space below the prompt if needed
+
+                # Add a horizontal line to separate the image-prompt pairs
+                st.markdown("---")
+
+def validate_input_and_generate(prompts: List[str], image_ai_model, lora_tar_url, model_version_url, session_state,
+                                token_prefix) -> List[ImagePromptPair] | None:
+    if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE and not model_version_url:
+        st.warning("Set 'model_version_url' please")
+        return None
+    if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA and not lora_tar_url:
+        st.warning("Set 'lora_tar_url' please")
+        return None
+
+    gen_image_prompt_list: List[ImagePromptPair] = []
+    with st.spinner('Image generation...'):
             try:
-                if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION:
-                    image = generate_with_stable_diffusion(prompt)
-                elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA:
-                    if not lora_tar_url:
-                        st.warning("Set 'lora_tar_url' please")
-                    else:
-                        image = generate_with_stable_diffusion_custom_lora(f"{token_prefix}{prompt}", lora_tar_url)
-                elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE:
-                    if not model_version_url:
-                        st.warning("Set 'model_version_url' please")
-                    else:
-                        image = generate_with_stable_diffusion_custom_trained(f"{token_prefix}{prompt}", model_version_url)
-                elif image_ai_model == ImageModelGeneration.DALLE_3:
-                    image = generate_with_dalle3(prompt)
-                session_state.image_generation_data.gen_image_pil = image
+                images = generate(prompts, image_ai_model, token_prefix, lora_tar_url, model_version_url)
+                for i, prompt in enumerate(prompts):
+                    gen_image_prompt_list.append(ImagePromptPair(prompt=prompt, image_pil=images[i]))
             except Exception as e:
                 print("Exception during image generation", str(e))
                 if "NSFW" in str(e):
                     st.warning("NSFW content detected. Try running it again, or try a different prompt.")
                 else:
                     st.warning("Something went wrong during image generation. Please try again.")
+    if gen_image_prompt_list:
+        session_state.image_generation_data.gen_image_prompt_list = gen_image_prompt_list
+        return gen_image_prompt_list
+    else:
+        return None
 
-    # Display image
-    if image:
-        st.image(image, width=512)
+
