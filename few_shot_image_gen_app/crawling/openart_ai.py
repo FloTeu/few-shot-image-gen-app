@@ -157,8 +157,9 @@ def expand_prompt_text(driver):
             continue
 
 def click_image(driver, prompt):
-    # cut prompt to handle ' char
+    # cut prompt to handle ' and " char
     prompt = prompt[:prompt.find("'")]
+    prompt = prompt[:prompt.find('"')]
     #prompt_web_elements = driver.find_elements(By.XPATH, f"//span[text()='{prompt}']")
     #prompt_web_elements = driver.find_elements(By.XPATH, f"//*[contains(text(), '{prompt}')]")
     prompt_web_elements = driver.find_elements(By.XPATH, f'//img[contains(@alt, "{prompt}")]')
@@ -206,7 +207,10 @@ def crawl_openartai_similar_images(crawling_tab, image_nr):
     midjourney_image: AIImage = session_state.crawling_data.images[image_nr]
 
     # Click on selected image
-    click_image(driver, midjourney_image.prompt)
+    try:
+        click_image(driver, midjourney_image.prompt)
+    except Exception as e:
+        st.warning("Could not crawl similar images")
     time.sleep(1)
     crawling_progress_bar.progress(30,text=progress_text + ": Crawling...")
 
