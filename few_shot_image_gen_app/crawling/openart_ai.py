@@ -199,7 +199,7 @@ def crawl_openartai(crawling_tab):
     crawling_progress_bar.empty()
 
 def crawl_openartai_similar_images(crawling_tab, image_nr):
-    progress_text = "Crawling Midjourney images"
+    progress_text = "Crawl openart ai images"
     crawling_progress_bar = crawling_tab.progress(0, text=progress_text)
     # Get session templates
     session_state: SessionState = st.session_state["session_state"]
