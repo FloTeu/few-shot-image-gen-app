@@ -65,7 +65,6 @@ def apply_filters(driver: WebDriver, preiod_wait_in_sec=1):
     driver.find_elements(By.CLASS_NAME, 'MuiFormControlLabel-root')[2].click()
 
 def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress: int, progress_max=90) -> List[AIImage]:
-    midjourney_images: List[AIImage] = []
     try:
         # if we have a presentation view, driver should include only images for this view
         driver_view = driver.find_elements(By.XPATH, "//div[@role='presentation']")[-1]
@@ -78,7 +77,7 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
     wait_until_element_disappears(driver, '//*[@role="progressbar"]', timeout=10)
 
     # Make sure after loadingbar disappeared, that image/prompt elements are ready for crawling
-    time.sleep(1)
+    time.sleep(2)
     expand_prompt_text(driver)
 
     save_html(driver)
@@ -89,6 +88,30 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
         print("Retry extracting columns")
         columns: List[WebElement] = driver_view.find_elements(By.XPATH, ".//*[contains(@style, 'flex-direction:column')]")
 
+    grid_columns, gridcells = get_girdcells(columns)
+
+    # 3. Extract image and prompt templates
+    progress_left = progress_max - progress
+    print(f"Found {len(gridcells)} gridcells with potential image and prompt pairs. {len(columns)} columns, {len(grid_columns)} grid_columns")
+
+    expected_num_ai_images = len(gridcells)
+    ai_images = extract_image_prompt_pairs(crawling_progress_bar, driver, gridcells, progress, progress_left)
+
+    # Retry extracting ai images
+    if len(ai_images) < (expected_num_ai_images/2):
+        columns: List[WebElement] = driver_view.find_elements(By.XPATH,
+                                                              ".//*[contains(@style, 'flex-direction: column')]")
+        if len(columns) == 0:
+            print("Retry extracting columns")
+            columns: List[WebElement] = driver_view.find_elements(By.XPATH,
+                                                                  ".//*[contains(@style, 'flex-direction:column')]")
+        grid_columns, gridcells = get_girdcells(columns)
+        ai_images = extract_image_prompt_pairs(crawling_progress_bar, driver, gridcells, progress, progress_left)
+
+    return ai_images
+
+
+def get_girdcells(columns):
     grid_columns: List[List[WebElement]] = []
     for column in columns:
         grid_columns.append(column.find_elements(By.CLASS_NAME, 'MuiCard-root'))
@@ -98,10 +121,11 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
             for grid_column in grid_columns:
                 with suppress(IndexError):
                     gridcells.append(grid_column[i])
+    return grid_columns, gridcells
 
-    # 3. Extract image and prompt templates
-    progress_left = progress_max - progress
-    print(f"Found {len(gridcells)} gridcells with potential image and prompt pairs. {len(columns)} columns, {len(grid_columns)} grid_columns")
+
+def extract_image_prompt_pairs(crawling_progress_bar, driver, gridcells, progress, progress_left):
+    ai_images: List[AIImage] = []
     for i, gridcell in enumerate(gridcells):
         try:
             # Scroll to the element using JavaScript
@@ -113,7 +137,8 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
             # catch wrong template image
             if "image_1685064640647_1024" in image_url:
                 continue
-            assert any(image_url.endswith(ending) for ending in [".webp", ".jpg", "jpeg", ".png"]) , f"image_url {image_url}, is not in the expected image format"
+            assert any(image_url.endswith(ending) for ending in
+                       [".webp", ".jpg", "jpeg", ".png"]), f"image_url {image_url}, is not in the expected image format"
             # extract prompt from text area
             ## Note: old way to extract prompt
             # text_elements = gridcell.find_elements(By.CLASS_NAME, "MuiTypography-body2")
@@ -123,15 +148,15 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
             ## Note: Prompt is now placed inside of image alt
             prompt = image_element.get_attribute('alt').removeprefix("Prompt: ")
 
-            if not check_if_image_exists(midjourney_images, image_url):
-                midjourney_images.append(AIImage(image_url=image_url, prompt=prompt))
-            crawling_progress_bar.progress(int(progress + (progress_left * (i/len(gridcells)))), text="Crawling Midjourney images" + ": Crawling...")
+            if not check_if_image_exists(ai_images, image_url):
+                ai_images.append(AIImage(image_url=image_url, prompt=prompt))
+            crawling_progress_bar.progress(int(progress + (progress_left * (i / len(gridcells)))),
+                                           text="Crawling Midjourney images" + ": Crawling...")
 
         except Exception as e:
             print("Could not extract image and prompt", str(e))
             continue
-
-    return midjourney_images
+    return ai_images
 
 
 def wait_until_image_loaded(gridcell, wait_secs=1):
