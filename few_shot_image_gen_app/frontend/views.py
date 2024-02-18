@@ -10,6 +10,7 @@ from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
 from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration, PromptGenerationModel, ImagePromptPair
 from few_shot_image_gen_app.image.generate import generate
+from few_shot_image_gen_app.image import conversion
 from few_shot_image_gen_app.utils import extract_json_from_text
 from few_shot_image_gen_app.session import set_session_state_if_not_exists
 
@@ -189,11 +190,11 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
 
     # Display images with prompts
     if images_and_prompts:
-        for image_and_prompt in images_and_prompts:
+        for i, image_and_prompt in enumerate(images_and_prompts):
             # Create a container for each image-prompt pair
             with st.container():
                 # Use columns to layout the image and the prompt
-                col1, col2 = st.columns((2, 3))
+                col1, col2, col3 = st.columns((2, 3, 1))
 
                 # Display the image in the first column with a fixed width
                 with col1:
@@ -203,6 +204,18 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
                 with col2:
                     st.markdown(f"## {image_and_prompt.prompt}")  # Increase the size of the prompt text
                     st.write("")  # Optional: add extra space below the prompt if needed
+
+                with col3:
+                    # is_download_visible = st.checkbox("Activate Download Image Button",
+                    #                                   key=f"download_final_upload_ready_image_{i}")
+                    # if is_download_visible:
+                    #     with st.spinner("Load Download Button"):
+                    st.download_button("Download Image", data=conversion.pil2bytes_io(
+                        image_and_prompt.image_pil),
+                                       file_name=f"export.png",
+                                       mime=f"image/png",
+                                       use_container_width=True,
+                                       key=f"download_button_{i}")
 
                 # Add a horizontal line to separate the image-prompt pairs
                 st.markdown("---")
