@@ -3,7 +3,7 @@ import json
 from typing import List
 
 import streamlit as st
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 
@@ -95,9 +95,10 @@ def display_prompt_generation_tab(midjourney_images):
                 markdown2 += prompt_generator.prompt_elements.examples_intro.replace("underlying format",
                                                                                      ":green[underlying format]")
                 markdown2 += "\n"
-            system_message = prompt_generator.prompt_elements.get_example_msg_prompt_template()
+            example_templates = prompt_generator.prompt_elements.get_example_msg_prompt_templates()
             # markdown2 += (f":orange[{system_message}]")
-            for example in system_message.prompt.template.split("\n"):
+
+            for example in example_templates[0].prompt.template.split("\n"):
                 markdown2 += "\n"
                 markdown2 += (f":orange[{example}]")
                 markdown2 += "\n\n"
