@@ -40,12 +40,11 @@ def replicate_generate(model_version: str, input: dict, output_format: OutputFor
             img_url = output_i
     return bytes2pil(requests.get(img_url, stream=True).content)
 
-def replicate_post(model: str, version: str, input: dict) -> str:
+def replicate_post(version: str, input: dict) -> str:
     """Returns id to get response afterwards with another get request"""
     headers = {'Content-type': 'application/json', "Authorization": f"Token {st.secrets['replicate']}"}
     url = "https://api.replicate.com/v1/predictions"
     body = {
-        "model": model,
         "version": version,
         "input": input
     }
@@ -87,7 +86,7 @@ def generate_with_dalle3(prompt: str, quality: OpenAIImageQuality = OpenAIImageQ
 def generate_all_replicate(model_version: str, prompts: List[str], **input_kwargs) -> List[Image.Image]:
     response_ids = []
     for prompt in prompts:
-        response_ids.append(replicate_post(model=model_version.split(":")[0],
+        response_ids.append(replicate_post(#model=model_version.split(":")[0],
                        version=model_version.split(":")[1],
                        input={"prompt": prompt, **input_kwargs}))
     img_urls = []
