@@ -21,6 +21,7 @@ class ImageModelCrawling(str, Enum):
 
 class ImageModelGeneration(str, Enum):
     STABLE_DIFFUSION = "Stable Diffusion (SDXL)"
+    STABLE_DIFFUSION_V3 = "Stable Diffusion (V3)"
     STABLE_DIFFUSION_CUSTOM_LORA = "Stable Diffusion LoRa"
     STABLE_DIFFUSION_CUSTOM_REPLICATE = "Stable Diffusion Replicate Training"
     DALLE_3 = "DALL-E 3"

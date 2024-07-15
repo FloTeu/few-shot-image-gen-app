@@ -160,6 +160,7 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
     # Atm only SDXL is available
     image_ai_model = st.selectbox("Image GenAI Model", (
         ImageModelGeneration.STABLE_DIFFUSION.value,
+        ImageModelGeneration.STABLE_DIFFUSION_V3.value,
         ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA.value,
         ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE.value,
         ImageModelGeneration.DALLE_3.value))

@@ -16,6 +16,7 @@ from few_shot_image_gen_app.data_classes import ImageModelGeneration
 from few_shot_image_gen_app.image.conversion import bytes2pil
 
 SDXL_MODEL_VERSION = "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b"
+SDV3_MODEL_VERSION = "stability-ai/stable-diffusion-3"
 SDXL_LORA_MODEL_VERSION = "zylim0702/sdxl-lora-customize-model:5a2b1cff79a2cf60d2a498b424795a90e26b7a3992fbd13b340f73ff4942b81e"
 
 class OutputFormat(Enum):
@@ -40,14 +41,20 @@ def replicate_generate(model_version: str, input: dict, output_format: OutputFor
             img_url = output_i
     return bytes2pil(requests.get(img_url, stream=True).content)
 
-def replicate_post(version: str, input: dict) -> str:
+def replicate_post(input: dict, version: str | None = None) -> str:
     """Returns id to get response afterwards with another get request"""
     headers = {'Content-type': 'application/json', "Authorization": f"Token {st.secrets['replicate']}"}
-    url = "https://api.replicate.com/v1/predictions"
-    body = {
-        "version": version,
-        "input": input
-    }
+    if version == SDV3_MODEL_VERSION:
+        url = f"https://api.replicate.com/v1/models/{SDV3_MODEL_VERSION}/predictions"
+        body = {
+            "input": input
+        }
+    else:
+        url = "https://api.replicate.com/v1/predictions"
+        body = {
+            "version": version,
+            "input": input
+        }
     r = requests.post(url, json=body, headers=headers)
     return r.json()["id"]
 
@@ -57,7 +64,6 @@ async def async_replicate_run(model_version: str, input: dict):
 
 def generate_with_stable_diffusion(prompt: str) -> Image:
     return replicate_generate(SDXL_MODEL_VERSION, {"prompt": prompt, "apply_watermark": False}, output_format=OutputFormat.GENERATOR)
-
 
 def generate_with_stable_diffusion_custom_lora(prompt: str, lora_url: str) -> Image:
     return replicate_generate(SDXL_LORA_MODEL_VERSION, {"prompt": prompt, "Lora_url": lora_url}, output_format=OutputFormat.GENERATOR)
@@ -85,10 +91,11 @@ def generate_with_dalle3(prompt: str, quality: OpenAIImageQuality = OpenAIImageQ
 
 def generate_all_replicate(model_version: str, prompts: List[str], **input_kwargs) -> List[Image.Image]:
     response_ids = []
+    version = model_version.split(":")[1] if model_version != SDV3_MODEL_VERSION else SDV3_MODEL_VERSION
     for prompt in prompts:
-        response_ids.append(replicate_post(#model=model_version.split(":")[0],
-                       version=model_version.split(":")[1],
-                       input={"prompt": prompt, **input_kwargs}))
+        response_ids.append(replicate_post(
+                       input={"prompt": prompt, **input_kwargs},
+                       version=version))
     img_urls = []
     for response_id in response_ids:
         response = requests.get(f"https://api.replicate.com/v1/predictions/{response_id}",
@@ -115,6 +122,8 @@ def generate(prompts: List[str], image_ai_model: ImageModelGeneration, token_pre
     input_kwargs = {}
     if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION:
         model_version = SDXL_MODEL_VERSION
+    elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_V3:
+        model_version = SDV3_MODEL_VERSION
     elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA:
         model_version = SDXL_LORA_MODEL_VERSION
         prompts = [f"{token_prefix}{prompt}" for prompt in prompts]
