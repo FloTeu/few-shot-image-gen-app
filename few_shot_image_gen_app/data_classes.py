@@ -3,7 +3,7 @@ from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
 from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 from dataclasses import dataclass, field
 from typing import List, Optional
-from enum import Enum
+from enum import StrEnum, Enum
 from PIL import Image as PILImage
 
 class CrawlingTargetPage(str, Enum):
@@ -20,6 +20,9 @@ class ImageModelCrawling(str, Enum):
     DALLE_2 = "DALL·E 2"
 
 class ImageModelGeneration(str, Enum):
+    FLUX_FAST = "FLUX Fast"
+    IMAGEN_4_FAST = "Imagen 4 Fast"
+    NANO_BANANA = "Nano Banana"
     STABLE_DIFFUSION = "Stable Diffusion (SDXL)"
     STABLE_DIFFUSION_V3 = "Stable Diffusion (V3)"
     STABLE_DIFFUSION_CUSTOM_LORA = "Stable Diffusion LoRa"
@@ -27,9 +30,19 @@ class ImageModelGeneration(str, Enum):
     DALLE_3 = "DALL-E 3"
 
 
-class PromptGenerationModel(str, Enum):
-    GPT_35 = "GPT 3-5 (ChatGPT)"
-    GPT_4 = "GPT 4"
+class PromptGenerationModel(StrEnum):
+    GPT_4o = "GPT 4o"
+    GPT_5 = "GPT 5"
+    GPT_35 = "GPT 3-5"
+
+def llm_model_to_api_name(model: PromptGenerationModel) -> str:
+    """Map PromptGenerationModel to OpenAI API model name"""
+    mapping = {
+        PromptGenerationModel.GPT_5: "gpt-5",
+        PromptGenerationModel.GPT_4o: "gpt-4o",
+        PromptGenerationModel.GPT_35: "gpt-3.5-turbo-1106",
+    }
+    return mapping[model]
 
 @dataclass
 class AIImage:

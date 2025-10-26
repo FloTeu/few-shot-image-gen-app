@@ -8,7 +8,8 @@ from langchain_community.chat_models import ChatOpenAI
 from llm_prompting_gen.generators import ParsablePromptEngineeringGenerator
 
 from few_shot_image_gen_app.llm_output import ImagePromptOutputModel
-from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration, PromptGenerationModel, ImagePromptPair
+from few_shot_image_gen_app.data_classes import AIImage, SessionState, ImageModelGeneration, PromptGenerationModel, \
+    ImagePromptPair, llm_model_to_api_name
 from few_shot_image_gen_app.image.generate import generate
 from few_shot_image_gen_app.image import conversion
 from few_shot_image_gen_app.utils import extract_json_from_text
@@ -121,8 +122,12 @@ def generate_image_model_prompts(prompts: List[str], tab_prompt_gen):
     print("Generate image prompts with few shots", prompts)
     with tab_prompt_gen:
         with st.spinner('Wait for prompt generation'):
-            model_name = "gpt-3.5-turbo-1106" if st.session_state["llm_model"] == PromptGenerationModel.GPT_35 else "gpt-4-1106-preview"
-            llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name=model_name)
+            selected_model = PromptGenerationModel(st.session_state["llm_model"])
+            model_name = llm_model_to_api_name(selected_model)
+            temperature = st.session_state["temperature"] if "temperature" in st.session_state else 0.7
+            if selected_model == PromptGenerationModel.GPT_5:
+                temperature = 1
+            llm = ChatOpenAI(temperature=temperature, model_name=model_name)
             prompt_gen = ParsablePromptEngineeringGenerator.from_json("templates/stable_diffusion_prompt_gen.json",
                                                                       llm=llm, pydantic_cls=ImagePromptOutputModel)
             # Overwrite few shot examples
@@ -157,11 +162,12 @@ def display_image_gen_tab(prompt_gen_llm_output: ImagePromptOutputModel | None):
     if prompt_gen_llm_output:
         prompt_suggestion = st.selectbox("Generated Prompts", prompt_gen_llm_output.image_prompts)
     prompt = st.text_area("Prompt", value=prompt_suggestion)
-    # Atm only SDXL is available
     image_ai_model = st.selectbox("Image GenAI Model", (
+        ImageModelGeneration.FLUX_FAST.value,
         ImageModelGeneration.STABLE_DIFFUSION.value,
+        ImageModelGeneration.NANO_BANANA.value,
+        ImageModelGeneration.IMAGEN_4_FAST.value,
         ImageModelGeneration.STABLE_DIFFUSION_V3.value,
-        ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA.value,
         ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE.value,
         ImageModelGeneration.DALLE_3.value))
     lora_tar_url = None

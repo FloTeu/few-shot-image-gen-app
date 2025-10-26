@@ -11,6 +11,7 @@ from io import BytesIO
 from enum import Enum
 
 from PIL import Image
+from requests import Response
 
 from few_shot_image_gen_app.data_classes import ImageModelGeneration
 from few_shot_image_gen_app.image.conversion import bytes2pil
@@ -41,18 +42,18 @@ def replicate_generate(model_version: str, input: dict, output_format: OutputFor
             img_url = output_i
     return bytes2pil(requests.get(img_url, stream=True).content)
 
-def replicate_post(input: dict, version: str | None = None) -> str:
+def replicate_post(input: dict, version: str | None = None, is_replicate_trained_model: bool = False) -> str:
     """Returns id to get response afterwards with another get request"""
     headers = {'Content-type': 'application/json', "Authorization": f"Token {st.secrets['replicate']}"}
-    if version == SDV3_MODEL_VERSION:
-        url = f"https://api.replicate.com/v1/models/{SDV3_MODEL_VERSION}/predictions"
-        body = {
-            "input": input
-        }
-    else:
+    if version in [SDXL_MODEL_VERSION, SDXL_LORA_MODEL_VERSION] or is_replicate_trained_model:
         url = "https://api.replicate.com/v1/predictions"
         body = {
             "version": version,
+            "input": input
+        }
+    else:
+        url = f"https://api.replicate.com/v1/models/{version}/predictions"
+        body = {
             "input": input
         }
     r = requests.post(url, json=body, headers=headers)
@@ -89,19 +90,26 @@ def generate_with_dalle3(prompt: str, quality: OpenAIImageQuality = OpenAIImageQ
 
     return Image.open(BytesIO(response.content))
 
-def generate_all_replicate(model_version: str, prompts: List[str], **input_kwargs) -> List[Image.Image]:
+def get_image_url_from_replicate_response(response: Response) -> str:
+    output = response.json()["output"]
+    url = output[0] if isinstance(output, list) else output
+    return url
+
+
+def generate_all_replicate(model_version: str, prompts: List[str], is_replicate_trained_model: bool = False, **input_kwargs) -> List[Image.Image]:
     response_ids = []
-    version = model_version.split(":")[1] if model_version != SDV3_MODEL_VERSION else SDV3_MODEL_VERSION
+    version = model_version.split(":")[1] if ":" in model_version else model_version
     for prompt in prompts:
         response_ids.append(replicate_post(
                        input={"prompt": prompt, **input_kwargs},
-                       version=version))
+                       version=version,
+                       is_replicate_trained_model=is_replicate_trained_model))
     img_urls = []
     for response_id in response_ids:
         response = requests.get(f"https://api.replicate.com/v1/predictions/{response_id}",
                                 headers={"Authorization": f"Token {st.secrets['replicate']}"})
         if response.json()["status"] == "succeeded":
-            img_urls.append(response.json()["output"][0])
+            img_urls.append(get_image_url_from_replicate_response(response))
         while response.json()["status"] != "succeeded":
             response = requests.get(f"https://api.replicate.com/v1/predictions/{response_id}",
                                     headers={"Authorization": f"Token {st.secrets['replicate']}"})
@@ -110,7 +118,7 @@ def generate_all_replicate(model_version: str, prompts: List[str], **input_kwarg
                 time.sleep(2)
                 continue
             elif response.json()["status"] == "succeeded":
-                img_urls.append(response.json()["output"][0])
+                img_urls.append(get_image_url_from_replicate_response(response))
             else:
                 print(f"Warning: id {response_id} could not be generated successfully")
                 break
@@ -122,6 +130,12 @@ def generate(prompts: List[str], image_ai_model: ImageModelGeneration, token_pre
     input_kwargs = {}
     if image_ai_model == ImageModelGeneration.STABLE_DIFFUSION:
         model_version = SDXL_MODEL_VERSION
+    elif image_ai_model == ImageModelGeneration.IMAGEN_4_FAST:
+        model_version = "google/imagen-4-fast"
+    elif image_ai_model == ImageModelGeneration.FLUX_FAST:
+        model_version = "black-forest-labs/flux-schnell"
+    elif image_ai_model == ImageModelGeneration.NANO_BANANA:
+        model_version = "google/nano-banana"
     elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_V3:
         model_version = SDV3_MODEL_VERSION
     elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_LORA:
@@ -131,7 +145,7 @@ def generate(prompts: List[str], image_ai_model: ImageModelGeneration, token_pre
     elif image_ai_model == ImageModelGeneration.STABLE_DIFFUSION_CUSTOM_REPLICATE:
         model_version = model_version_url
         prompts = [f"{token_prefix}{prompt}" for prompt in prompts]
-        input_kwargs = {}
+        input_kwargs = {"is_replicate_trained_model": True}
     elif image_ai_model == ImageModelGeneration.DALLE_3:
         # Note: Dall-e is currently not implemented for async requests
         for prompt in prompts:

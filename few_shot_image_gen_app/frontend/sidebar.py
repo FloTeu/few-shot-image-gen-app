@@ -53,8 +53,9 @@ def display_sidebar(tab_crawling, tab_prompt_gen):
         with st.sidebar:
             st.subheader("2. Prompt Generation")
             ai_images = session_state.crawling_data.images
-            st.selectbox("LLM Model", (PromptGenerationModel.GPT_35.value, PromptGenerationModel.GPT_4.value), key="llm_model")
-            st.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
+            llm_model = st.selectbox("LLM Model", list(PromptGenerationModel), key="llm_model")
+            if llm_model != PromptGenerationModel.GPT_5:
+                st.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
             selected_prompts = st.multiselect("Select Designs for prompt generation:",
                                                       [i + 1 for i in range(len(ai_images))], key='selected_prompts')
             prompts = [mid_img.prompt for i, mid_img in enumerate(ai_images) if (i + 1) in selected_prompts]
